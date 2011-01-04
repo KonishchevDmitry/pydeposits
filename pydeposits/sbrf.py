@@ -8,10 +8,7 @@ import urllib2
 import xlrd
 
 from cl.core import Error
-
-
-NETWORK_TIMEOUT = 30
-"""Network timeout in seconds."""
+from pydeposits import constants
 
 
 # TODO: get all rates per day
@@ -25,7 +22,7 @@ def get_rates(dates):
             url = "https://www.sbrf.ru/common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/" \
                     "{2}/{1:02d}/dm{1:02d}{0:02d}.xls".format(date.day, date.month, date.year)
             try:
-                xls_contents = urllib2.urlopen(url, timeout = NETWORK_TIMEOUT).read()
+                xls_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
             except urllib2.HTTPError as e:
                 if e.code == 404:
                     continue

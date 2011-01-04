@@ -6,3 +6,9 @@ APP_NAME = "pydeposits"
 APP_UNIX_NAME = "pydeposits"
 """Application UNIX name."""
 
+LOCAL_CURRENCY = "RUR"
+"""Local currency."""
+
+NETWORK_TIMEOUT = 30
+"""Network timeout in seconds."""
+

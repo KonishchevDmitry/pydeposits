@@ -9,6 +9,7 @@ import sqlite3
 
 from cl.core import Error
 
+from pydeposits import cbrf
 from pydeposits import constants
 from pydeposits import sbrf
 from pydeposits import util
@@ -85,6 +86,9 @@ class RateArchive:
         if there is no data for the specified date.
         """
 
+        if currency == constants.LOCAL_CURRENCY:
+            return ( Decimal(1), Decimal(1) )
+
         day = util.get_day(date)
 
         rates = [ rate for rate in self.__db.execute("""
@@ -150,7 +154,7 @@ class RateArchive:
             date += datetime.timedelta(1)
 
         rates = {}
-        for source in (sbrf,):
+        for source in (cbrf, sbrf):
             rates.update(source.get_rates(dates))
         self.__todays_rates = rates.pop(today, {})
 
