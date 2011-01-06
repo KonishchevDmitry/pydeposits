@@ -14,8 +14,6 @@ from pydeposits import constants
 from pydeposits import sbrf
 from pydeposits import util
 
-LOG = logging.getLogger("pydeposits.rate_archive")
-
 
 MIN_RATE_ACCURACY = 10
 """Minimum rate accuracy (in days).
@@ -31,53 +29,50 @@ ARCHIVE_PERIOD_AT_FIRST_START = 30
 
 
 class RateArchive:
-    """Object that provides an ability to get currency rates info."""
+    """Object that provides an ability to get currency rates info.
 
-    __db = None
+    Attention! Class and its objects are not thread-safe.
+    """
+
+    _db = None
     """Database for storing rate data."""
 
-    __todays_rates = None
+    _todays_rates = None
     """Rates for today."""
 
 
     def __init__(self):
-        try:
-            db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
-            db_path = os.path.join(db_dir, "rates.sqlite")
-
+        if RateArchive._todays_rates is None:
             try:
-                os.makedirs(db_dir)
-            except EnvironmentError, e:
-                if e.errno != errno.EEXIST:
-                    raise
+                db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
+                db_path = os.path.join(db_dir, "rates.sqlite")
 
-            self.__db = sqlite3.connect(db_path)
+                try:
+                    os.makedirs(db_dir)
+                except EnvironmentError, e:
+                    if e.errno != errno.EEXIST:
+                        raise
 
-            self.__db.execute("""
-                CREATE TABLE IF NOT EXISTS rates (
-                    day INTEGER,
-                    currency TEXT,
-                    sell_rate TEXT,
-                    buy_rate TEXT
-                )
-            """)
-            self.__db.execute("CREATE INDEX IF NOT EXISTS rate_index ON rates (day, currency)")
-            self.__db.commit()
-        except Exception, e:
-            raise Error("Unable to open database '{0}':", db_path).append(e)
+                RateArchive._db = sqlite3.connect(db_path)
 
-        try:
-            self.__update()
-        except Exception as e:
-            raise Error("Unable to update rate info.").append(e)
+                self._db.execute("""
+                    CREATE TABLE IF NOT EXISTS rates (
+                        day INTEGER,
+                        currency TEXT,
+                        sell_rate TEXT,
+                        buy_rate TEXT
+                    )
+                """)
+                self._db.execute("CREATE INDEX IF NOT EXISTS rate_index ON rates (day, currency)")
 
-
-    def __del__(self):
-        if self.__db is not None:
-            try:
-                self.__db.close()
+                self._db.commit()
             except Exception, e:
-                LOG.error(Error("Unable to close the database:").append(e))
+                raise Error("Unable to open database '{0}':", db_path).append(e)
+
+            try:
+                RateArchive._todays_rates = self.__update()
+            except Exception as e:
+                raise Error("Unable to update rate info.").append(e)
 
 
     def get_approx(self, currency, date):
@@ -91,7 +86,7 @@ class RateArchive:
 
         day = util.get_day(date)
 
-        rates = [ rate for rate in self.__db.execute("""
+        rates = [ rate for rate in self._db.execute("""
             SELECT
                 day,
                 sell_rate,
@@ -103,10 +98,10 @@ class RateArchive:
         """, (currency, day - MIN_RATE_ACCURACY, day + MIN_RATE_ACCURACY)) ]
 
         if (
-            currency in self.__todays_rates and
+            currency in self._todays_rates and
             day - MIN_RATE_ACCURACY <= util.get_day(datetime.date.today()) <= day + MIN_RATE_ACCURACY
         ):
-            rates.append(self.__todays_rates[currency])
+            rates.append(self._todays_rates[currency])
 
         nearest = None
         for rate in rates:
@@ -131,19 +126,19 @@ class RateArchive:
                     currency, str(rates[0]), str(rates[1])
                 ))
 
-        self.__db.executemany("INSERT INTO rates VALUES (?, ?, ?, ?)", data)
-        self.__db.commit()
+        self._db.executemany("INSERT INTO rates VALUES (?, ?, ?, ?)", data)
+        self._db.commit()
 
 
     def __update(self):
         """Updates currency rate info."""
 
-        last_date = self.__db.execute("SELECT MAX(day) FROM rates").fetchone()[0]
+        last_date = self._db.execute("SELECT MAX(day) FROM rates").fetchone()[0]
 
         if last_date:
             min_date = datetime.date.fromtimestamp(0) + datetime.timedelta(last_date + 1)
         else:
-            LOG.info("Downloading currency rate archive. Please wait...")
+            print "Downloading currency rate archive. Please wait..."
             min_date = datetime.date.today() - datetime.timedelta(ARCHIVE_PERIOD_AT_FIRST_START)
 
         dates = []
@@ -156,8 +151,11 @@ class RateArchive:
         rates = {}
         for source in (cbrf, sbrf):
             rates.update(source.get_rates(dates))
-        self.__todays_rates = rates.pop(today, {})
+
+        todays_rates = rates.pop(today, {})
 
         if rates:
             self.__add(rates)
+
+        return todays_rates
 
