@@ -1,0 +1,3 @@
+[submodule "cl"]
+	path = cl
+	url = git@github.com:KonishchevDmitry/pycl.git
