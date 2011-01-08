@@ -1,0 +1,17 @@
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
+Name: pydeposits
+Upstream-Author: Dmitry Konishchev <konishchev@gmail.com>
+Packaged-By: Dmitry Konishchev <konishchev@gmail.com>
+Packaged-Date: Sat, 08 Jan 2011 23:57:49 +0300
+Original-Source-Location: https://github.com/KonishchevDmitry/pydeposits
+
+
+Files: *
+Copyright: 2011, Dmitry Konishchev <konishchev@gmail.com>
+License: GPL-3+
+
+
+License: GPL-3
+
+    On Debian systems, the full text of the GNU General Public License version
+    3 can be found in the file `/usr/share/common-licenses/GPL-3'.

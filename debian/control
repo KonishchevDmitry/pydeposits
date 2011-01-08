@@ -1,0 +1,26 @@
+Source: pydeposits
+Section: misc
+Priority: optional
+Maintainer: Dmitry Konishchev <konishchev@gmail.com>
+Build-Depends: cdbs, debhelper (>= 7)
+Standards-Version: 3.9.1
+Homepage: https://github.com/KonishchevDmitry/pydeposits
+
+Package: pydeposits
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-xlrd
+Description: A small program that helps you to control your deposits
+ This program can be very useful if you have many deposit accounts and you want
+ to know how profitable they really are, how many opened accounts do you have
+ now and how much money do you have. Of course, you can manage and calculate it
+ by yourself, but it is too boring and error-prone. :)
+ .
+ You specify information about your deposits and it shows you all information
+ about them. It automatically downloads currency rates from The Central Bank of
+ the Russian Federation and precious metal rates from Sberbank (Russian
+ Federation), so it can show you how profitable your deposits due to
+ fluctuation of the currency rates.
+ .
+ Note: this program is intended for Russian people, because all account
+ statements and currency rates are based on RUR currency.
+
