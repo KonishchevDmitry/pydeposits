@@ -1,11 +1,14 @@
 """Contains tools for getting rate info from The Central Bank of the Russian Federation."""
 
 from decimal import Decimal
+import logging
 import urllib2
 import xml.dom.minidom
 
 from cl.core import Error
 from pydeposits import constants
+
+LOG = logging.getLogger("pydeposits.cbrf")
 
 
 def get_rates(dates):
@@ -15,6 +18,8 @@ def get_rates(dates):
 
     for date in dates:
         try:
+            LOG.info("Getting CBRF's currency rates for %s...", date)
+
             url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" \
                     "{0:02d}/{1:02d}/{2}".format(date.day, date.month, date.year)
 

@@ -14,6 +14,8 @@ from pydeposits import constants
 from pydeposits import sbrf
 from pydeposits import util
 
+LOG = logging.getLogger("pydeposits.rate_archive")
+
 
 MIN_RATE_ACCURACY = 10
 """Minimum rate accuracy (in days).
@@ -25,7 +27,6 @@ any info for this days.
 # TODO
 ARCHIVE_PERIOD_AT_FIRST_START = 30
 ARCHIVE_PERIOD_AT_FIRST_START = 5 * 365
-#ARCHIVE_PERIOD_AT_FIRST_START = 5 * 365
 """Number of days for which rate data will be downloaded at first start."""
 
 
@@ -150,7 +151,7 @@ class RateArchive:
         if last_date:
             min_date = datetime.date.fromtimestamp(0) + datetime.timedelta(last_date + 1)
         else:
-            print "Downloading currency rate archive. Please wait..."
+            LOG.info("Downloading currency rate archive. It may take a lot of time, please wait...")
             min_date = datetime.date.today() - datetime.timedelta(ARCHIVE_PERIOD_AT_FIRST_START)
 
         dates = []
