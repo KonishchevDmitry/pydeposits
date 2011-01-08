@@ -44,6 +44,7 @@ def print_account_statement(holdings):
         "pure_profit":  _round_normal(total_profit)
     })
 
+    print "\nAccount statement:\n"
     table.draw([
         { "id": "open_date",           "name": "Open date",          "align": "center" },
         { "id": "close_date",          "name": "Close date",         "align": "center" },

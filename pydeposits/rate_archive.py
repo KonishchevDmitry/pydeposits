@@ -20,13 +20,11 @@ LOG = logging.getLogger("pydeposits.rate_archive")
 MIN_RATE_ACCURACY = 10
 """Minimum rate accuracy (in days).
 
-In Russia we celebrate the new year for 10 days, so some banks may not provide
-any info for this days.
+In Russia we celebrate the new year for 10 days, so banks may not provide any
+info for this days.
 """
 
-# TODO
-ARCHIVE_PERIOD_AT_FIRST_START = 30
-ARCHIVE_PERIOD_AT_FIRST_START = 5 * 365
+ARCHIVE_PERIOD_AT_FIRST_START = 10 * 365
 """Number of days for which rate data will be downloaded at first start."""
 
 
