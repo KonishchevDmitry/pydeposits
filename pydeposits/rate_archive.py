@@ -24,6 +24,7 @@ any info for this days.
 
 # TODO
 ARCHIVE_PERIOD_AT_FIRST_START = 30
+ARCHIVE_PERIOD_AT_FIRST_START = 5 * 365
 #ARCHIVE_PERIOD_AT_FIRST_START = 5 * 365
 """Number of days for which rate data will be downloaded at first start."""
 
@@ -33,6 +34,9 @@ class RateArchive:
 
     Attention! Class and its objects are not thread-safe.
     """
+
+    _db_dir = None
+    """Database directory."""
 
     _db = None
     """Database for storing rate data."""
@@ -44,11 +48,12 @@ class RateArchive:
     def __init__(self):
         if RateArchive._todays_rates is None:
             try:
-                db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
-                db_path = os.path.join(db_dir, "rates.sqlite")
+                if self._db_dir is None:
+                    self._db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
+                db_path = os.path.join(self._db_dir, "rates.sqlite")
 
                 try:
-                    os.makedirs(db_dir)
+                    os.makedirs(self._db_dir)
                 except EnvironmentError, e:
                     if e.errno != errno.EEXIST:
                         raise
@@ -94,7 +99,7 @@ class RateArchive:
             FROM
                 rates
             WHERE
-                currency = ? AND ? <= day <= ?
+                currency = ? AND ? <= day AND day <= ?
         """, (currency, day - MIN_RATE_ACCURACY, day + MIN_RATE_ACCURACY)) ]
 
         if (
@@ -112,6 +117,13 @@ class RateArchive:
             return None
         else:
             return ( Decimal(nearest[1]), Decimal(nearest[2]) )
+
+
+    @classmethod
+    def set_db_dir(cls, path):
+        """Sets custom database directory."""
+
+        cls._db_dir = path
 
 
     def __add(self, rates):
