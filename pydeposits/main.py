@@ -48,11 +48,11 @@ def main():
                     debug_mode = True
                 elif option in ("-h", "--help"):
                     print (
-                        u"""{0} [OPTIONS]\n\n"""
+                        u"""pydeposits [OPTIONS]\n\n"""
                          """Options:\n"""
                          """ -d, --debug-mode  enable debug mode\n"""
                          """ -h, --help        show this help"""
-                    ).format(argv[0])
+                    )
                     sys.exit(0)
                 else:
                     raise LogicalError()

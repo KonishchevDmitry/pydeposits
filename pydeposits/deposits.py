@@ -28,6 +28,7 @@ def get():
         raise Error("Failed to load deposit info from {0}:", info_path).append(e)
 
     fields = (
+        # TODO: source amount
         ( "bank",            "string",  True  ),
         ( "open_date",       "date",    True  ),
         ( "close_date",      "date",    False ),
