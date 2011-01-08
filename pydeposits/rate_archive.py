@@ -163,7 +163,8 @@ class RateArchive:
 
         rates = {}
         for source in (cbrf, sbrf):
-            rates.update(source.get_rates(dates))
+            for date, new_rates in source.get_rates(dates).iteritems():
+                rates.setdefault(date, {}).update(new_rates)
 
         todays_rates = rates.pop(today, {})
 
