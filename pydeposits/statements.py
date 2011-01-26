@@ -12,7 +12,7 @@ import pydeposits.constants as constants
 
 
 # TODO: closed deposits
-def print_account_statement(holdings):
+def print_account_statement(holdings, today):
     """Prints out current deposit statement."""
 
     holdings = copy.deepcopy(holdings)
@@ -23,7 +23,7 @@ def print_account_statement(holdings):
     total_profit = Decimal(0)
 
     for holding in holdings:
-        _calculate_holding_info(holding)
+        _calculate_holding_info(holding, today)
 
         total += holding.get("current_cost", 0)
         total_profit += holding.get("pure_profit", 0)
@@ -44,7 +44,7 @@ def print_account_statement(holdings):
         "pure_profit":  _round_normal(total_profit)
     })
 
-    print "\nAccount statement:\n"
+    print "\nAccount statement for {0}:\n".format(today)
     table.draw([
         { "id": "open_date",           "name": "Open date",          "align": "center" },
         { "id": "close_date",          "name": "Close date",         "align": "center" },
@@ -60,7 +60,7 @@ def print_account_statement(holdings):
     ])
 
 
-def _calculate_current_amount(holding):
+def _calculate_current_amount(holding, today):
     """Calculates current amount on a holding."""
 
     if "interest" not in holding:
@@ -68,7 +68,6 @@ def _calculate_current_amount(holding):
         return
 
     open_date = holding["open_date"]
-    today = datetime.date.today()
 
     if "close_date" in holding and holding["close_date"] < today:
         to_date = holding["close_date"]
@@ -137,27 +136,27 @@ def _calculate_current_amount(holding):
     holding["current_amount"] = amount
 
 
-def _calculate_current_cost(holding):
+def _calculate_current_cost(holding, today):
     """Calculates current cost of a holding (in a local currency)."""
 
     rate_archive = RateArchive()
-    cur_rates = rate_archive.get_approx(holding["currency"], datetime.date.today())
+    cur_rates = rate_archive.get_approx(holding["currency"], today)
     if cur_rates is not None:
         # TODO: bank interest
         holding["current_cost"] = holding["current_amount"] * cur_rates[1]
 
 
-def _calculate_holding_info(holding):
+def _calculate_holding_info(holding, today):
     """Calculates various info about a holding."""
 
-    _calculate_past_cost(holding)
-    _calculate_rate_profit(holding)
-    _calculate_current_amount(holding)
-    _calculate_current_cost(holding)
-    _calculate_pure_profit(holding)
+    _calculate_past_cost(holding, today)
+    _calculate_rate_profit(holding, today)
+    _calculate_current_amount(holding, today)
+    _calculate_current_cost(holding, today)
+    _calculate_pure_profit(holding, today)
 
 
-def _calculate_past_cost(holding):
+def _calculate_past_cost(holding, today):
     """
     Calculates cost of a holding (in a local currency) for the time, when it
     was opened.
@@ -182,16 +181,16 @@ def _calculate_past_cost(holding):
             holding["past_cost"] = past_rate * holding["amount"]
 
 
-def _calculate_pure_profit(holding):
+def _calculate_pure_profit(holding, today):
     """Calculates pure profit from a holding for today."""
 
     if "past_cost" in holding and "current_cost" in holding:
         holding["pure_profit"] = holding["current_cost"] - holding["past_cost"]
         # TODO ?
-        holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (datetime.date.today() - holding["open_date"]).days * _days_in_year(datetime.date.today().year)
+        holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
 
 
-def _calculate_rate_profit(holding):
+def _calculate_rate_profit(holding, today):
     """Calculates rate profit for a holding."""
 
     source_currency = holding.get("source_currency", holding["currency"])
@@ -200,7 +199,7 @@ def _calculate_rate_profit(holding):
         ( source_currency != constants.LOCAL_CURRENCY or holding["currency"] != constants.LOCAL_CURRENCY ) and
         "past_cost" in holding
     ):
-        cur_rates = RateArchive().get_approx(holding["currency"], datetime.date.today())
+        cur_rates = RateArchive().get_approx(holding["currency"], today)
 
         if cur_rates is not None:
             holding["rate_profit"] = cur_rates[1] * holding["amount"] - holding["past_cost"]

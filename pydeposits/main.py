@@ -16,6 +16,7 @@ import os
 INSTALL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, INSTALL_DIR)
 
+import datetime
 import getopt
 import locale
 import traceback
@@ -32,6 +33,7 @@ def main():
     """The application's main function."""
 
     debug_mode = False
+    today = datetime.date.today()
 
     try:
         locale.setlocale(locale.LC_ALL, "")
@@ -41,7 +43,7 @@ def main():
             argv = [ string.decode(locale.getlocale()[1]) for string in sys.argv ]
 
             cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
-                "dh", [ "debug-mode", "help" ] )
+                "dht:", [ "debug-mode", "help", "today=" ] )
 
             for option, value in cmd_options:
                 if option in ("-d", "--debug-mode"):
@@ -50,13 +52,18 @@ def main():
                     print (
                         u"""pydeposits [OPTIONS]\n\n"""
                          """Options:\n"""
+                         """ -t, --today       behave like today is the day specified by the argument in %d.%m.%Y format\n"""
                          """ -d, --debug-mode  enable debug mode\n"""
                          """ -h, --help        show this help"""
                     )
                     sys.exit(0)
+                elif option in ("-t", "--today"):
+                    try:
+                        today = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+                    except Exception, e:
+                        raise Error("Invalid today date ({0}).", value)
                 else:
                     raise LogicalError()
-
             if len(cmd_args):
                 raise Error("'{0}' is not recognized", cmd_args[0])
         except Exception, e:
@@ -74,7 +81,7 @@ def main():
             # To print exact error string without any modifications by EE().
             sys.exit(unicode(e))
 
-        pydeposits.statements.print_account_statement(deposits)
+        pydeposits.statements.print_account_statement(deposits, today)
     except Exception, e:
         if debug_mode:
             traceback.print_exc()
