@@ -1,4 +1,11 @@
 /.vim
 /cscope.files
+/debian/files
+/debian/pydeposits.debhelper.log
+/debian/pydeposits.substvars
+/debian/pydeposits
+/debian/stamp-makefile-build
+/debian/stamp-makefile-install
+/rates.sqlite
 /tags
 *.pyc

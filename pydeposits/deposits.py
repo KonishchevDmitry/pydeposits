@@ -61,7 +61,7 @@ def get():
                 if type_name == "string":
                     deposit[field_name] = (deposit[field_name])
                 elif type_name == "date":
-                    deposit[field_name] = datetime.datetime.strptime(deposit[field_name], "%d.%m.%Y").date()
+                    deposit[field_name] = datetime.datetime.strptime(deposit[field_name], constants.DATE_FORMAT).date()
                 elif type_name == "decimal":
                     deposit[field_name] = Decimal(str(deposit[field_name]))
                 else:

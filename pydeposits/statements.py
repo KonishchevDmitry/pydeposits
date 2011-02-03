@@ -11,8 +11,7 @@ from pydeposits.text_table import TextTable
 import pydeposits.constants as constants
 
 
-# TODO: closed deposits
-def print_account_statement(holdings, today):
+def print_account_statement(holdings, today, show_all):
     """Prints out current deposit statement."""
 
     holdings = copy.deepcopy(holdings)
@@ -23,10 +22,20 @@ def print_account_statement(holdings, today):
     total_profit = Decimal(0)
 
     for holding in holdings:
-        _calculate_holding_info(holding, today)
+        opened = not holding.get("closed", False)
+        if today < holding["open_date"] or not show_all and not opened:
+            continue
 
-        total += holding.get("current_cost", 0)
-        total_profit += holding.get("pure_profit", 0)
+        holding["open_date_string"] = holding["open_date"].strftime(constants.DATE_FORMAT)
+        if "close_date" in holding:
+            holding["close_date_string"] = holding["close_date"].strftime(constants.DATE_FORMAT)
+
+        _calculate_holding_info(holding,
+            holding["close_date"] if holding.get("close_date", today) < today else today)
+
+        if opened:
+            total += holding.get("current_cost", 0)
+            total_profit += holding.get("pure_profit", 0)
 
         for key in ("amount", "rate_profit", "current_amount", "current_cost", "pure_profit"):
             if key in holding:
@@ -46,8 +55,8 @@ def print_account_statement(holdings, today):
 
     print "\nAccount statement for {0}:\n".format(today)
     table.draw([
-        { "id": "open_date",           "name": "Open date",          "align": "center" },
-        { "id": "close_date",          "name": "Close date",         "align": "center" },
+        { "id": "open_date_string",    "name": "Open date",          "align": "center" },
+        { "id": "close_date_string",   "name": "Close date",         "align": "center" },
         { "id": "bank",                "name": "Bank",               "align": "center" },
         { "id": "currency",            "name": "Currency",           "align": "center" },
         { "id": "amount",              "name": "Amount"                                },
@@ -187,7 +196,10 @@ def _calculate_pure_profit(holding, today):
     if "past_cost" in holding and "current_cost" in holding:
         holding["pure_profit"] = holding["current_cost"] - holding["past_cost"]
         # TODO ?
-        holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
+        if holding["past_cost"] == 0 or today == holding["open_date"]:
+            holding["pure_profit_percent"] = Decimal(0)
+        else:
+            holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
 
 
 def _calculate_rate_profit(holding, today):

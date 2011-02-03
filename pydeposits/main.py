@@ -24,6 +24,7 @@ import traceback
 import cl.log
 from cl.core import EE, Error, LogicalError
 
+from pydeposits import constants
 from pydeposits.rate_archive import RateArchive
 import pydeposits.deposits
 import pydeposits.statements
@@ -32,6 +33,7 @@ import pydeposits.statements
 def main():
     """The application's main function."""
 
+    show_all = False
     debug_mode = False
     today = datetime.date.today()
 
@@ -43,23 +45,27 @@ def main():
             argv = [ string.decode(locale.getlocale()[1]) for string in sys.argv ]
 
             cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
-                "dht:", [ "debug-mode", "help", "today=" ] )
+                "adht:", [ "all", "debug-mode", "help", "today=" ] )
 
             for option, value in cmd_options:
-                if option in ("-d", "--debug-mode"):
+                if option in ("-a", "--all"):
+                    show_all = True
+                elif option in ("-d", "--debug-mode"):
                     debug_mode = True
                 elif option in ("-h", "--help"):
                     print (
                         u"""pydeposits [OPTIONS]\n\n"""
                          """Options:\n"""
-                         """ -t, --today       behave like today is the day specified by the argument in %d.%m.%Y format\n"""
+                         """ -a, --all         show all deposits (not only that are not closed)\n"""
+                         """ -t, --today       behave like today is the day specified by the argument in {0} format\n"""
                          """ -d, --debug-mode  enable debug mode\n"""
                          """ -h, --help        show this help"""
+                         .format(constants.DATE_FORMAT)
                     )
                     sys.exit(0)
                 elif option in ("-t", "--today"):
                     try:
-                        today = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+                        today = datetime.datetime.strptime(value, constants.DATE_FORMAT).date()
                     except Exception, e:
                         raise Error("Invalid today date ({0}).", value)
                 else:
@@ -81,13 +87,13 @@ def main():
             # To print exact error string without any modifications by EE().
             sys.exit(unicode(e))
 
-        pydeposits.statements.print_account_statement(deposits, today)
+        pydeposits.statements.print_account_statement(deposits, today, show_all)
     except Exception, e:
         if debug_mode:
             traceback.print_exc()
             sys.exit(1)
         else:
-            sys.exit(EE(e))
+            sys.exit("pydeposits crashed: " + EE(e))
     else:
         sys.exit(0)
 

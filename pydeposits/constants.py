@@ -12,3 +12,6 @@ LOCAL_CURRENCY = "RUR"
 NETWORK_TIMEOUT = 30
 """Network timeout in seconds."""
 
+DATE_FORMAT = "%d.%m.%Y"
+"""Default date format."""
+
