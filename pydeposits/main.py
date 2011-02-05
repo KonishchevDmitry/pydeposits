@@ -35,6 +35,7 @@ def main():
 
     show_all = False
     debug_mode = False
+    offline_mode = False
     today = datetime.date.today()
 
     try:
@@ -45,7 +46,7 @@ def main():
             argv = [ string.decode(locale.getlocale()[1]) for string in sys.argv ]
 
             cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
-                "adht:", [ "all", "debug-mode", "help", "today=" ] )
+                "adhot:", [ "all", "debug-mode", "help", "offline-mode", "today=" ] )
 
             for option, value in cmd_options:
                 if option in ("-a", "--all"):
@@ -56,13 +57,16 @@ def main():
                     print (
                         u"""pydeposits [OPTIONS]\n\n"""
                          """Options:\n"""
-                         """ -a, --all         show all deposits (not only that are not closed)\n"""
-                         """ -t, --today       behave like today is the day specified by the argument in {0} format\n"""
-                         """ -d, --debug-mode  enable debug mode\n"""
-                         """ -h, --help        show this help"""
+                         """ -a, --all           show all deposits (not only that are not closed)\n"""
+                         """ -t, --today         behave like today is the day specified by the argument in {0} format\n"""
+                         """ -o, --offline-mode  offline mode (do not connect to the Internet for getting currency rates)\n"""
+                         """ -d, --debug-mode    enable debug mode\n"""
+                         """ -h, --help          show this help"""
                          .format(constants.DATE_FORMAT)
                     )
                     sys.exit(0)
+                elif option in ("-o", "--offline-mode"):
+                    offline_mode = True
                 elif option in ("-t", "--today"):
                     try:
                         today = datetime.datetime.strptime(value, constants.DATE_FORMAT).date()
@@ -80,6 +84,7 @@ def main():
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))
+        RateArchive.enable_offline_mode(offline_mode)
 
         try:
             deposits = pydeposits.deposits.get()

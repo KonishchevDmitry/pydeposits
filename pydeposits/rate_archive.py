@@ -40,12 +40,18 @@ class RateArchive:
     _db = None
     """Database for storing rate data."""
 
+    _offline_mode = False
+    """
+    True if we must not connect to the Internet for getting currency rates and
+    should use only the local database.
+    """
+
     _todays_rates = None
     """Rates for today."""
 
 
     def __init__(self):
-        if RateArchive._todays_rates is None:
+        if RateArchive._db is None:
             try:
                 if self._db_dir is None:
                     self._db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
@@ -57,9 +63,8 @@ class RateArchive:
                     if e.errno != errno.EEXIST:
                         raise
 
-                RateArchive._db = sqlite3.connect(db_path)
-
-                self._db.execute("""
+                db = sqlite3.connect(db_path)
+                db.execute("""
                     CREATE TABLE IF NOT EXISTS rates (
                         day INTEGER,
                         currency TEXT,
@@ -67,16 +72,25 @@ class RateArchive:
                         buy_rate TEXT
                     )
                 """)
-                self._db.execute("CREATE INDEX IF NOT EXISTS rate_index ON rates (day, currency)")
+                db.execute("CREATE INDEX IF NOT EXISTS rate_index ON rates (day, currency)")
+                db.commit()
 
-                self._db.commit()
+                RateArchive._db = db
             except Exception, e:
                 raise Error("Unable to open database '{0}':", db_path).append(e)
 
+        if RateArchive._todays_rates is None and not self._offline_mode:
             try:
                 RateArchive._todays_rates = self.__update()
             except Exception as e:
                 raise Error("Unable to update rate info.").append(e)
+
+
+    @classmethod
+    def enable_offline_mode(cls, value):
+        """Enables/disables the offline mode."""
+
+        cls._offline_mode = value
 
 
     def get_approx(self, currency, date):
@@ -102,6 +116,7 @@ class RateArchive:
         """, (currency, day - MIN_RATE_ACCURACY, day + MIN_RATE_ACCURACY)) ]
 
         if (
+            self._todays_rates is not None and
             currency in self._todays_rates and
             day - MIN_RATE_ACCURACY <= util.get_day(datetime.date.today()) <= day + MIN_RATE_ACCURACY
         ):

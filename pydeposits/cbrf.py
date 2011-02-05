@@ -50,7 +50,7 @@ def get_rates(dates):
 
             rates[date] = date_rates
         except Exception as e:
-            raise Error("Unable to get rate info from  The Central Bank of the Russian Federation for {0}:", date).append(e)
+            raise Error("Unable to get rate info from The Central Bank of the Russian Federation for {0}:", date).append(e)
 
     return rates
 
