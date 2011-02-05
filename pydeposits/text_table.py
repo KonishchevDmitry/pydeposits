@@ -27,20 +27,35 @@ class TextTable:
         headers = copy.deepcopy(headers)
         encoding = locale.getlocale()[1]
 
-        for id, header in enumerate(headers):
-            max_len = len(header.get("name") or "")
+        first = True
+        for header in headers:
+            max_len = 0
             for row in self.__rows:
                 max_len = max(max_len, len(unicode(row.get(header["id"]) or "")))
-            header["max_len"] = max_len
 
-            if id:
+            header["hide"] = ( header.get("hide_if_empty", False) and max_len == 0 )
+            header["max_len"] = max(max_len, len(header.get("name") or ""))
+
+            if header["hide"]:
+                continue
+
+            if first:
+                first = False
+            else:
                 stream.write(" " * spacing)
             stream.write(header["name"].center(header["max_len"]).encode(encoding))
+
         stream.write("\n\n")
 
         for row in self.__rows:
-            for id, header in enumerate(headers):
-                if id:
+            first = True
+            for header in headers:
+                if header["hide"]:
+                    continue
+
+                if first:
+                    first = False
+                else:
                     stream.write(" " * spacing)
 
                 value = unicode(row.get(header["id"], ""))
@@ -55,3 +70,4 @@ class TextTable:
 
                 stream.write(value.encode(encoding))
             stream.write("\n")
+

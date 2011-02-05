@@ -23,6 +23,8 @@ def print_account_statement(holdings, today, show_all):
 
     for holding in holdings:
         opened = not holding.get("closed", False)
+        expired = ( holding.get("close_date", today) < today )
+
         if today < holding["open_date"] or not show_all and not opened:
             continue
 
@@ -30,8 +32,10 @@ def print_account_statement(holdings, today, show_all):
         if "close_date" in holding:
             holding["close_date_string"] = holding["close_date"].strftime(constants.DATE_FORMAT)
 
-        _calculate_holding_info(holding,
-            holding["close_date"] if holding.get("close_date", today) < today else today)
+            if expired:
+                holding["expired"] = "Expired"
+
+        _calculate_holding_info(holding, holding["close_date"] if expired else today)
 
         if opened:
             total += holding.get("current_cost", 0)
@@ -55,17 +59,18 @@ def print_account_statement(holdings, today, show_all):
 
     print "\nAccount statement for {0}:\n".format(today)
     table.draw([
-        { "id": "open_date_string",    "name": "Open date",          "align": "center" },
-        { "id": "close_date_string",   "name": "Close date",         "align": "center" },
-        { "id": "bank",                "name": "Bank",               "align": "center" },
-        { "id": "currency",            "name": "Currency",           "align": "center" },
-        { "id": "amount",              "name": "Amount"                                },
-        { "id": "interest",            "name": "Interest"                              },
-        { "id": "rate_profit",         "name": "Rate profit"                           },
-        { "id": "current_amount",      "name": "Current amount"                        },
-        { "id": "current_cost",        "name": "Current cost"                          },
-        { "id": "pure_profit",         "name": "Pure profit"                           },
-        { "id": "pure_profit_percent", "name": "Pure profit persent"                   },
+        { "id": "expired",             "name": "Expiration",         "align": "center", "hide_if_empty": True },
+        { "id": "open_date_string",    "name": "Open date",          "align": "center"                        },
+        { "id": "close_date_string",   "name": "Close date",         "align": "center"                        },
+        { "id": "bank",                "name": "Bank",               "align": "center"                        },
+        { "id": "currency",            "name": "Currency",           "align": "center"                        },
+        { "id": "amount",              "name": "Amount"                                                       },
+        { "id": "interest",            "name": "Interest"                                                     },
+        { "id": "rate_profit",         "name": "Rate profit"                                                  },
+        { "id": "current_amount",      "name": "Current amount"                                               },
+        { "id": "current_cost",        "name": "Current cost"                                                 },
+        { "id": "pure_profit",         "name": "Pure profit"                                                  },
+        { "id": "pure_profit_percent", "name": "Pure profit persent"                                          },
     ])
 
 
