@@ -74,6 +74,28 @@ def print_account_statement(holdings, today, show_all):
     ])
 
 
+def print_expiring(holdings, today, days):
+    """Prints out holdings that will be expired in specified number of days."""
+
+    expiring = []
+
+    for holding in sorted(holdings, cmp = _holding_cmp, reverse = True):
+        if (
+            not holding.get("closed", False) and
+            "close_date" in holding and
+            holding["close_date"] <= today + datetime.timedelta(days)
+        ):
+            expiring.append(holding)
+
+    if expiring:
+        print u"Following deposits will be expired in {0} days:".format(days)
+        for holding in expiring:
+            print u"  * {0} {1} ({2})".format(
+                holding["close_date"].strftime(constants.DATE_FORMAT),
+                holding["bank"], holding["currency"]
+            )
+
+
 def _calculate_current_amount(holding, today):
     """Calculates current amount on a holding."""
 
