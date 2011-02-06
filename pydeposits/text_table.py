@@ -1,7 +1,6 @@
 """Provides a class for displaying table data in the text form."""
 
 import copy
-import locale
 import sys
 
 
@@ -25,7 +24,6 @@ class TextTable:
         """Prints out the table contents."""
 
         headers = copy.deepcopy(headers)
-        encoding = locale.getlocale()[1]
 
         first = True
         for header in headers:
@@ -43,7 +41,7 @@ class TextTable:
                 first = False
             else:
                 stream.write(" " * spacing)
-            stream.write(header["name"].center(header["max_len"]).encode(encoding))
+            stream.write(header["name"].center(header["max_len"]))
 
         stream.write("\n\n")
 
@@ -68,6 +66,6 @@ class TextTable:
                 else:
                     value = value.rjust(header["max_len"])
 
-                stream.write(value.encode(encoding))
+                stream.write(value)
             stream.write("\n")
 

@@ -3,22 +3,27 @@
 """The application's startup module."""
 
 import sys
-
 if sys.version_info < (2, 6):
     if __name__ == "__main__":
         sys.exit("Error: pydeposits needs python >= 2.6.")
     else:
         raise Exception("pydeposits needs python >= 2.6")
 
-import os
+import locale
+locale.setlocale(locale.LC_ALL, "")
+SYSTEM_ENCODING = locale.getlocale()[1]
 
+import codecs
+sys.stdout = codecs.getwriter(SYSTEM_ENCODING)(sys.stdout)
+sys.stderr = codecs.getwriter(SYSTEM_ENCODING)(sys.stderr)
+
+import os
 # Setting up the module paths.
 INSTALL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, INSTALL_DIR)
 
 import datetime
 import getopt
-import locale
 import traceback
 
 import cl.log
@@ -40,11 +45,9 @@ def main():
     today = datetime.date.today()
 
     try:
-        locale.setlocale(locale.LC_ALL, "")
-
         # Parsing command line options -->
         try:
-            argv = [ string.decode(locale.getlocale()[1]) for string in sys.argv ]
+            argv = [ string.decode(SYSTEM_ENCODING) for string in sys.argv ]
 
             cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
                 "ade:hot:", [ "all", "debug-mode", "expiring=", "help", "offline-mode", "today=" ] )
