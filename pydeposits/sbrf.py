@@ -5,6 +5,7 @@
 from decimal import Decimal
 import datetime
 import logging
+import re
 import urllib2
 
 import xlrd
@@ -21,6 +22,21 @@ def get_rates(dates):
 
     rates = {}
 
+    rate_urls = {}
+    url_prefix = "http://sbrf.ru"
+    rate_list_re = re.compile(r"""<ul\s+class\s*=\s*["']docs["']\s*>(.*?)</ul>""",
+        re.IGNORECASE | re.MULTILINE | re.DOTALL)
+    rate_url_re = re.compile(r"""
+        <li\s+class\s*=\s*["']xls["']>\s*
+            <a\s+href\s*=\s*["'](
+                # URLs may be:
+                # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls"
+                # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls"
+                # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls"
+                [^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2}).xls
+            )["']
+    """, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE)
+
     for date in dates:
         try:
             # SBRF has rate info for metals only since 05.03.2003
@@ -29,20 +45,48 @@ def get_rates(dates):
 
             LOG.info("Getting SBRF's currency rates for %s...", date)
 
-            if date < datetime.date(2010, 2, 1):
-                url_prefix = "https://www.sbrf.ru/common/img/uploaded/c_list/sdmet/download"
-            else:
-                url_prefix = "https://www.sbrf.ru/common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download"
-            url = "{0}/{3}/{2:02d}/dm{2:02d}{1:02d}.xls".format(url_prefix, date.day, date.month, date.year)
+            # Getting rates for the month -->
+            month_spec = (date.year, date.month)
 
-            try:
+            day_urls = rate_urls.get(month_spec)
+            if day_urls is None:
+                day_urls = {}
+
+                url = "{0}/moscow/ru/valkprev/archive_1/index.php?year114={1}&month114={2}".format(
+                    url_prefix, date.year, date.month)
+
+                rate_list_html = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
+                match = rate_list_re.search(rate_list_html)
+                if not match:
+                    raise Error("server returned unknown HTML response")
+                rate_list_html = match.group(1)
+
+                matches = rate_url_re.findall(rate_list_html)
+                if not matches:
+                    raise Error("server returned unknown HTML response")
+
+                for match in matches:
+                    if date.year == int(match[1]) and date.month == int(match[2]):
+                        url = match[0]
+                        if url.startswith("/"):
+                            url = url_prefix + url
+                        day_urls[int(match[4])] = url
+                    else:
+                        # If we ask for data that SBRF doesn't have, it returns data for previous month/year.
+                        pass
+
+                rate_urls[month_spec] = day_urls
+            # Getting rates for the month <--
+
+            # Getting XML file with rates for the date -->
+            url = day_urls.get(date.day)
+
+            if url:
                 xls_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
-            except urllib2.HTTPError as e:
-                if e.code == 404:
-                    LOG.debug("There is no data for SBRF's currency rates for %s...", date)
-                    continue
-                else:
-                    raise
+            else:
+                LOG.debug("There is no data for SBRF's currency rates for %s...", date)
+                continue
+            # Getting XML file with rates for the date <--
 
             xls = xlrd.open_workbook(file_contents = xls_contents)
 
