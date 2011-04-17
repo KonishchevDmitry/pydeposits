@@ -49,6 +49,7 @@ def print_account_statement(holdings, today, show_all):
             if key in holding:
                 holding[key] = _round_precise(holding[key])
 
+        holding["closed"] = "" if opened else "x"
         table.add_row(holding)
 
     table.add_row({})
@@ -62,6 +63,7 @@ def print_account_statement(holdings, today, show_all):
         { "id": "expired",             "name": "Expiration",         "align": "center", "hide_if_empty": True },
         { "id": "open_date_string",    "name": "Open date",          "align": "center"                        },
         { "id": "close_date_string",   "name": "Close date",         "align": "center"                        },
+        { "id": "closed",              "name": "Closed",             "align": "center", "hide_if_empty": True },
         { "id": "bank",                "name": "Bank",               "align": "center"                        },
         { "id": "currency",            "name": "Currency",           "align": "center"                        },
         { "id": "amount",              "name": "Amount"                                                       },

@@ -37,6 +37,7 @@ def get():
         ( "amount",          "decimal", True  ),
         ( "interest",        "decimal", False ),
         ( "capitalization",  "decimal", False ),
+        ( "closed",          "bool",    False ),
     )
 
     field_names = set()
@@ -59,7 +60,9 @@ def get():
                         continue
 
                 if type_name == "string":
-                    deposit[field_name] = (deposit[field_name])
+                    pass
+                elif type_name == "bool":
+                    deposit[field_name] = bool(deposit[field_name])
                 elif type_name == "date":
                     deposit[field_name] = datetime.datetime.strptime(deposit[field_name], constants.DATE_FORMAT).date()
                 elif type_name == "decimal":
@@ -85,7 +88,7 @@ For example:
 
 # -*- coding: utf-8 -*-
 
-# Required fields:
+# Fields:
 # * bank            - the bank name
 # * open_date       - the date when the deposit was opened
 # * close_date      - the date when the deposit will be closed (optional)
@@ -102,6 +105,7 @@ For example:
 # * capitalization  - You must specify capitalization field if your deposit has
 #                     capitalization option. The value is a number of months
 #                     after which capitalization occurs for this deposit.
+# * closed          - True if the deposit is already closed.
 
 
 deposits = [{{
