@@ -37,6 +37,7 @@ def get():
         ( "amount",          "decimal", True  ),
         ( "interest",        "decimal", False ),
         ( "capitalization",  "decimal", False ),
+        ( "completions",     "",        False ),
         ( "closed",          "bool",    False ),
     )
 
@@ -59,16 +60,39 @@ def get():
                     else:
                         continue
 
-                if type_name == "string":
+                if field_name == "completions":
+                    completion_fields = set(( "date", "amount" ))
+
+                    if not isinstance(deposit["completions"], list):
+                        raise Error("Invalid field type.")
+
+                    for completion in deposit["completions"]:
+                        if set(completion.keys()).difference(completion_fields):
+                            raise Error("Unknown field")
+
+                        completion["date"] = datetime.datetime.strptime(completion["date"], constants.DATE_FORMAT).date()
+                        completion["amount"] = Decimal(str(completion["amount"]))
+                elif type_name == "string":
                     pass
                 elif type_name == "bool":
-                    deposit[field_name] = bool(deposit[field_name])
+                    if not isinstance(deposit[field_name], bool):
+                        raise Error("Invalid field type.")
                 elif type_name == "date":
                     deposit[field_name] = datetime.datetime.strptime(deposit[field_name], constants.DATE_FORMAT).date()
                 elif type_name == "decimal":
                     deposit[field_name] = Decimal(str(deposit[field_name]))
                 else:
                     raise LogicalError()
+
+            if "completions" in deposit:
+                for completion in deposit["completions"]:
+                    if(
+                        completion["date"] < deposit["open_date"] or
+                        "close_date" in deposit and completion["date"] >= deposit["close_date"]
+                    ):
+                        raise Error("Invalid completion date.")
+
+                deposit["completions"].sort(lambda a, b: (a["date"] - b["date"]).days)
         except Exception, e:
             raise Error("Invalid deposit info:\n{0}", pprint.pformat(deposit))
 
@@ -105,6 +129,8 @@ For example:
 # * capitalization  - You must specify capitalization field if your deposit has
 #                     capitalization option. The value is a number of months
 #                     after which capitalization occurs for this deposit.
+# * completions     - A list of completions that has been committed after
+#                     opening the deposit.
 # * closed          - True if the deposit is already closed.
 
 
@@ -114,7 +140,7 @@ deposits = [{{
     "close_date":      "06.06.2011",
     "currency":        "RUR",
     "amount":          100000,
-    "interest":        9.75,
+    "interest":        "9.75",
     "capitalization":  1
 }},{{
     "bank":            u"РОСТ",
@@ -123,7 +149,14 @@ deposits = [{{
     "source_currency": "RUR",
     "currency":        "EUR",
     "amount":          2000,
-    "interest":        7
+    "interest":        7,
+    "completions":     [{{
+        "date":   "08.12.2010",
+        "amount": 100
+    }},{{
+        "date":   "02.03.2011",
+        "amount": 250
+    }}]
 }},{{
     "bank":            u"Сбербанк",
     "open_date":       "12.10.2009",

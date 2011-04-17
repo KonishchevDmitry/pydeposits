@@ -101,10 +101,6 @@ def print_expiring(holdings, today, days):
 def _calculate_current_amount(holding, today):
     """Calculates current amount on a holding."""
 
-    if "interest" not in holding:
-        holding["current_amount"] = holding["amount"]
-        return
-
     open_date = holding["open_date"]
 
     if "close_date" in holding and holding["close_date"] < today:
@@ -112,64 +108,60 @@ def _calculate_current_amount(holding, today):
     else:
         to_date = today
 
-    days = (to_date - open_date).days
-    per_day = holding["interest"] / 100 / _days_in_year(open_date.year)
+    per_day = holding.get("interest", Decimal(0)) / 100 / _days_in_year(open_date.year)
 
     profit = 0
     amount = holding["amount"]
 
-    if "capitalization" in holding:
-        if False:
-            # Simple calculation
+    month = -1
+    cur_date = open_date
+    next_date = cur_date
+    completions = holding.get("completions", [])[:]
 
-            days_in_month = 30
+    while True:
+        if next_date > to_date:
+            next_date = to_date
 
-            for month in xrange(1, days / days_in_month + 1):
-                profit += amount * per_day * days_in_month
-                days -= days_in_month
+        if completions:
+            while cur_date <= next_date:
+                while completions and completions[0]["date"] == cur_date:
+                    completion = completions.pop(0)
+                    amount += completion["amount"]
 
-                if month % holding["capitalization"] == 0:
-                    amount += profit
-                    profit = 0
+                if cur_date == next_date:
+                    break
+
+                profit += amount * per_day
+                cur_date += datetime.timedelta(1)
         else:
-            # More precise calculation but not exact because of ignoring
-            # nonbusiness days.
+            profit += amount * per_day * (next_date - cur_date).days
+            cur_date = next_date
 
-            month = -1
-            cur_date = open_date
-            next_date = cur_date
+        if cur_date == to_date:
+            amount += profit
+            break;
 
-            while next_date <= to_date:
-                processed_days = (next_date - cur_date).days
-                days -= processed_days
-                month += 1
+        month += 1
+        if "capitalization" in holding and month and month % holding["capitalization"] == 0:
+            amount += profit
+            profit = 0
 
-                profit += amount * per_day * processed_days
-                cur_date = next_date
+        next_date_year = cur_date.year
+        next_date_month = cur_date.month + 1
+        if next_date_month > 12:
+            next_date_year += 1
+            next_date_month = 1
+        next_date_day = open_date.day
 
-                if month and month % holding["capitalization"] == 0:
-                    amount += profit
-                    profit = 0
-
-                next_date_year = cur_date.year
-                next_date_month = cur_date.month + 1
-                if next_date_month > 12:
-                    next_date_year += 1
-                    next_date_month = 1
-                next_date_day = open_date.day
-
-                while True:
-                    try:
-                        next_date = datetime.date(next_date_year, next_date_month, next_date_day)
-                    except ValueError:
-                        next_date_day -= 1
-                        if next_date_day < 0:
-                            raise LogicalError()
-                    else:
-                        break
-
-    profit += amount * per_day * days
-    amount += profit
+        while True:
+            try:
+                next_date = datetime.date(next_date_year, next_date_month, next_date_day)
+            except ValueError:
+                next_date_day -= 1
+                if next_date_day < 0:
+                    raise LogicalError()
+            else:
+                break
 
     holding["current_amount"] = amount
 
