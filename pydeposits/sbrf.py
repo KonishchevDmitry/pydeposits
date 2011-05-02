@@ -63,7 +63,18 @@ def get_rates(dates):
 
                 matches = rate_url_re.findall(rate_list_html)
                 if not matches:
-                    raise Error("server returned unknown HTML response")
+                    # Month may be empty if it's only starting and there are
+                    # some holidays in the first days.
+                    if (
+                        datetime.date.today().month == date.month and (
+                            (date - datetime.date(date.year, date.month, 1)).days <= 2 or
+                            # Long New Year holidays
+                            date.month == 1 and (date - datetime.date(date.year, date.month, 1)).days <= 10
+                        )
+                    ):
+                        continue
+                    else:
+                        raise Error("server returned unknown HTML response")
 
                 for match in matches:
                     if date.year == int(match[1]) and date.month == int(match[2]):
