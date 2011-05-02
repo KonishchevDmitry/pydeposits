@@ -99,7 +99,7 @@ def print_expiring(holdings, today, days):
 
 
 def _calculate_current_amount(holding, today):
-    """Calculates current amount on a holding."""
+    """Calculates current amount and profit on a holding."""
 
     open_date = holding["open_date"]
 
@@ -210,17 +210,23 @@ def _calculate_past_cost(holding, today):
 
             holding["past_cost"] = past_rate * holding["amount"]
 
+    for completion in holding.get("completions", []):
+        if completion["date"] <= today:
+            holding["past_cost"] += completion["amount"]
+
 
 def _calculate_pure_profit(holding, today):
     """Calculates pure profit from a holding for today."""
 
     if "past_cost" in holding and "current_cost" in holding:
         holding["pure_profit"] = holding["current_cost"] - holding["past_cost"]
-        # TODO ?
-        if holding["past_cost"] == 0 or today == holding["open_date"]:
-            holding["pure_profit_percent"] = Decimal(0)
-        else:
-            holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
+
+        if "completions" not in holding:
+            # TODO ?
+            if holding["past_cost"] == 0 or today == holding["open_date"]:
+                holding["pure_profit_percent"] = Decimal(0)
+            else:
+                holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
 
 
 def _calculate_rate_profit(holding, today):
