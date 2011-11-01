@@ -185,6 +185,10 @@ def _calculate_holding_info(holding, today):
     _calculate_current_cost(holding, today)
     _calculate_pure_profit(holding, today)
 
+    for completion in holding.get("completions", []):
+        if completion["date"] <= today:
+            holding["amount"] += completion["amount"]
+
 
 def _calculate_past_cost(holding, today):
     """
