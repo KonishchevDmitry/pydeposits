@@ -33,7 +33,7 @@ def get_rates(dates):
                 # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls"
                 # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls"
                 # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls"
-                [^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2}).xls
+                [^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2})(_\d)?.xls
             )["']
     """, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE)
 
@@ -81,7 +81,8 @@ def get_rates(dates):
                         url = match[0]
                         if url.startswith("/"):
                             url = url_prefix + url
-                        day_urls[int(match[4])] = url
+
+                        day_urls.setdefault(int(match[4]), url)
                     else:
                         # If we ask for data that SBRF doesn't have, it returns data for previous month/year.
                         pass
