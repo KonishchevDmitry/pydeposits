@@ -9,13 +9,12 @@ if sys.version_info < (2, 6):
     else:
         raise Exception("pydeposits needs python >= 2.6")
 
-import locale
-locale.setlocale(locale.LC_ALL, "")
-SYSTEM_ENCODING = locale.getlocale()[1]
+import pycl.main
+pycl.main.set_environment()
 
 import codecs
-sys.stdout = codecs.getwriter(SYSTEM_ENCODING)(sys.stdout)
-sys.stderr = codecs.getwriter(SYSTEM_ENCODING)(sys.stderr)
+sys.stdout = codecs.getwriter(pycl.main.get_locale_encoding())(sys.stdout)
+sys.stderr = codecs.getwriter(pycl.main.get_locale_encoding())(sys.stderr)
 
 import os
 # Setting up the module paths.
@@ -27,6 +26,7 @@ import getopt
 import traceback
 
 import pycl.log
+import pycl.misc
 from pycl.core import EE, Error, LogicalError
 
 from pydeposits import constants
@@ -47,7 +47,7 @@ def main():
     try:
         # Parsing command line options -->
         try:
-            argv = [ string.decode(SYSTEM_ENCODING) for string in sys.argv ]
+            argv = [ pycl.misc.to_unicode(arg) for arg in sys.argv ]
 
             cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
                 "ade:hot:", [ "all", "debug-mode", "expiring=", "help", "offline-mode", "today=" ] )
