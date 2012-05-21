@@ -5,7 +5,7 @@ import logging
 import urllib2
 import xml.dom.minidom
 
-from cl.core import Error
+from pycl.core import Error
 from pydeposits import constants
 
 LOG = logging.getLogger("pydeposits.cbrf")

@@ -7,7 +7,7 @@ import logging
 import os
 import sqlite3
 
-from cl.core import Error
+from pycl.core import Error
 
 from pydeposits import cbrf
 from pydeposits import constants

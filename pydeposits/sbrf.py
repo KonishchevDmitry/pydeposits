@@ -10,7 +10,7 @@ import urllib2
 
 import xlrd
 
-from cl.core import Error
+from pycl.core import Error
 from pydeposits import constants
 
 LOG = logging.getLogger("pydeposits.sbrf")

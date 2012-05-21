@@ -26,8 +26,8 @@ import datetime
 import getopt
 import traceback
 
-import cl.log
-from cl.core import EE, Error, LogicalError
+import pycl.log
+from pycl.core import EE, Error, LogicalError
 
 from pydeposits import constants
 from pydeposits.rate_archive import RateArchive
@@ -92,7 +92,7 @@ def main():
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--
 
-        cl.log.setup(debug_mode)
+        pycl.log.setup(debug_mode)
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))

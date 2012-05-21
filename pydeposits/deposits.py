@@ -8,7 +8,7 @@ import imp
 import pprint
 import os
 
-from cl.core import Error, LogicalError
+from pycl.core import Error, LogicalError
 
 from pydeposits import constants
 

@@ -4,7 +4,7 @@ from decimal import Decimal
 import copy
 import datetime
 
-from cl.core import LogicalError
+from pycl.core import LogicalError
 
 from pydeposits.rate_archive import RateArchive
 from pydeposits.text_table import TextTable

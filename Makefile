@@ -10,7 +10,7 @@ data_dir := $(datarootdir)/$(program_unix_name)
 all:
 
 install: all
-	for file in $$(find cl pydeposits -name '*.py'); do \
+	for file in $$(find pycl pydeposits -name '*.py'); do \
 		install -m 0644 -D $$file $(DESTDIR)$(data_dir)/$$file; \
 	done
 	mkdir -p $(DESTDIR)$(bindir)
@@ -19,7 +19,7 @@ install: all
 	chmod a+x $(DESTDIR)$(bindir)/$(program_unix_name)
 
 uninstall:
-	for file in $$(find cl pydeposits -name '*.py'); do \
+	for file in $$(find pycl pydeposits -name '*.py'); do \
 		rm -f $(DESTDIR)$(data_dir)/$$file; \
 	done
 	for dir in $$(find $(DESTDIR)$(data_dir) -type d | sort -r); do \
