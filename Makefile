@@ -14,7 +14,7 @@ install: all
 		install -m 0644 -D $$file $(DESTDIR)$(data_dir)/$$file; \
 	done
 	mkdir -p $(DESTDIR)$(bindir)
-	echo '#!/bin/sh\nexec $(data_dir)/$(program_unix_name)/main.py "$$@"' > $(DESTDIR)$(bindir)/$(program_unix_name)
+	echo '#!/bin/sh\nPYTHONPATH=$(data_dir) exec $(data_dir)/$(program_unix_name)/main.py "$$@"' > $(DESTDIR)$(bindir)/$(program_unix_name)
 	chmod a+x $(DESTDIR)$(data_dir)/$(program_unix_name)/main.py
 	chmod a+x $(DESTDIR)$(bindir)/$(program_unix_name)
 
