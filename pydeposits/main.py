@@ -12,10 +12,6 @@ if sys.version_info < (2, 6):
 import pycl.main
 pycl.main.set_environment()
 
-import codecs
-sys.stdout = codecs.getwriter(pycl.main.get_locale_encoding())(sys.stdout)
-sys.stderr = codecs.getwriter(pycl.main.get_locale_encoding())(sys.stderr)
-
 import os
 # Setting up the module paths.
 INSTALL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
