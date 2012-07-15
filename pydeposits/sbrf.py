@@ -100,7 +100,11 @@ def get_rates(dates):
                 continue
             # Getting XML file with rates for the date <--
 
-            xls = xlrd.open_workbook(file_contents = xls_contents)
+            try:
+                xls = xlrd.open_workbook(file_contents = xls_contents)
+            except Exception as e:
+                LOG.error("Unable to read data for SBRF's currency rates for %s: %s.", date, e)
+                continue
 
             # The *.xls file can contain a few empty sheets.
             # Choosing a non-empty sheet.
