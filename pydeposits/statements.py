@@ -4,10 +4,10 @@ from decimal import Decimal
 import copy
 import datetime
 
+from pycl.cli.text_table import TextTable
 from pycl.core import LogicalError
 
 from pydeposits.rate_archive import RateArchive
-from pydeposits.text_table import TextTable
 import pydeposits.constants as constants
 
 
