@@ -1,5 +1,7 @@
 """Stores and returns info about current and past currency rates."""
 
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import datetime
 import errno
@@ -185,4 +187,3 @@ class RateArchive:
             self.__add(rates)
 
         return todays_rates
-

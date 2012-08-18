@@ -1,5 +1,7 @@
 """Contains tools for getting rate info from The Central Bank of the Russian Federation."""
 
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import logging
 import urllib2
@@ -53,5 +55,3 @@ def get_rates(dates):
             raise Error("Unable to get rate info from The Central Bank of the Russian Federation for {0}:", date).append(e)
 
     return rates
-
-

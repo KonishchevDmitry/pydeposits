@@ -2,6 +2,8 @@
 
 """Contains tools for getting rate info from Sberbank."""
 
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import datetime
 import logging
@@ -145,9 +147,9 @@ def get_rates(dates):
                     if (
                         cell.ctype == xlrd.XL_CELL_TEXT and
                         (
-                            cell.value.find(u"Котировки покупки-продажи драгоценных металлов в обезличенном виде") >= 0
+                            cell.value.find("Котировки покупки-продажи драгоценных металлов в обезличенном виде") >= 0
                             or
-                            cell.value.find(u"Котировки продажи и покупки драгоценных металлов в обезличенном виде") >= 0
+                            cell.value.find("Котировки продажи и покупки драгоценных металлов в обезличенном виде") >= 0
                         )
                     ):
                         rates_title_found = True
@@ -172,9 +174,9 @@ def get_rates(dates):
                     texts.append(cell.value.strip())
 
             if texts != [
-                u"Наименование драгоценного металла",
-                u"Продажа, руб. за грамм",
-                u"Покупка, руб. за грамм"
+                "Наименование драгоценного металла",
+                "Продажа, руб. за грамм",
+                "Покупка, руб. за грамм"
             ]:
                 raise Error("Unable to find the rate table.")
 
@@ -185,10 +187,10 @@ def get_rates(dates):
             date_rates = rates.setdefault(date, {})
 
             for name, ru_name in (
-                ("AUR_SBRF", u"Золото"),
-                ("AGR_SBRF", u"Серебро"),
-                ("PTR_SBRF", u"Платина"),
-                ("PDR_SBRF", u"Палладий")
+                ("AUR_SBRF", "Золото"),
+                ("AGR_SBRF", "Серебро"),
+                ("PTR_SBRF", "Платина"),
+                ("PDR_SBRF", "Палладий")
             ):
                 row = sheet.row(row_id)
 
@@ -214,4 +216,3 @@ def get_rates(dates):
             raise Error("Unable to get rate info from Sberbank for {0}:", date).append(e)
 
     return rates
-

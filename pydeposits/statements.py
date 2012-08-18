@@ -1,11 +1,13 @@
 """Provides a tools for getting deposit statements."""
 
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import copy
 import datetime
 
 from pycl.cli.text_table import TextTable
-from pycl.core import LogicalError
+from pycl.core import Error, LogicalError
 
 from pydeposits.rate_archive import RateArchive
 import pydeposits.constants as constants
@@ -90,12 +92,11 @@ def print_expiring(holdings, today, days):
             expiring.append(holding)
 
     if expiring:
-        print u"Following deposits will be expired in {0} days:".format(days)
+        print "Following deposits will be expired in {0} days:".format(days)
         for holding in expiring:
-            print u"  * {0} {1} ({2})".format(
+            print "  * {0} {1} ({2})".format(
                 holding["close_date"].strftime(constants.DATE_FORMAT),
-                holding["bank"], holding["currency"]
-            )
+                holding["bank"], holding["currency"])
 
 
 def _calculate_current_amount(holding, today):
@@ -289,4 +290,3 @@ def _round_precise(value):
 
     if value is not None:
         return value.quantize(Decimal('0.00'))
-

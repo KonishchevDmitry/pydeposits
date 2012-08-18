@@ -1,5 +1,7 @@
 """Contains various application's constants."""
 
+from __future__ import unicode_literals
+
 APP_NAME = "pydeposits"
 """Application name."""
 

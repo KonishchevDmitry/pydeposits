@@ -2,15 +2,14 @@
 
 """The application's startup module."""
 
+from __future__ import unicode_literals
+
 import sys
 if sys.version_info < (2, 6):
     if __name__ == "__main__":
         sys.exit("Error: pydeposits needs python >= 2.6.")
     else:
         raise Exception("pydeposits needs python >= 2.6")
-
-import pycl.main
-pycl.main.set_environment()
 
 import os
 # Setting up the module paths.
@@ -22,6 +21,7 @@ import getopt
 import traceback
 
 import pycl.log
+import pycl.main
 import pycl.misc
 from pycl.core import EE, Error, LogicalError
 
@@ -39,6 +39,8 @@ def main():
     offline_mode = False
     show_expiring = None
     today = datetime.date.today()
+
+    pycl.main.setup_environment()
 
     try:
         # Parsing command line options -->
@@ -62,7 +64,7 @@ def main():
                         raise Error("Invalid number of days ({0}).", value)
                 elif option in ("-h", "--help"):
                     print (
-                        u"""pydeposits [OPTIONS]\n\n"""
+                        """pydeposits [OPTIONS]\n\n"""
                          """Options:\n"""
                          """ -a, --all            show all deposits (not only that are not closed)\n"""
                          """ -t, --today DAY      behave like today is the day, specified by the argument in {0} format\n"""
@@ -116,4 +118,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -2,6 +2,8 @@
 
 """Provides functions for parsing deposit info specified by the user."""
 
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import datetime
 import imp
@@ -102,7 +104,7 @@ def get():
     return deposits
 
 
-_NO_DEPOSIT_INFO_ERROR_MESSAGE = u"""\
+_NO_DEPOSIT_INFO_ERROR_MESSAGE = """\
 You haven't specified any deposit info.
 
 Please create file {0} and fill it up with information about your deposits. It
@@ -135,7 +137,7 @@ For example:
 
 
 deposits = [{{
-    "bank":            u"МКБ",
+    "bank":            "МКБ",
     "open_date":       "06.12.2010",
     "close_date":      "06.06.2011",
     "currency":        "RUR",
@@ -143,7 +145,7 @@ deposits = [{{
     "interest":        "9.75",
     "capitalization":  1
 }},{{
-    "bank":            u"РОСТ",
+    "bank":            "РОСТ",
     "open_date":       "19.11.2010",
     "close_date":      "22.05.2011",
     "source_currency": "RUR",
@@ -158,10 +160,9 @@ deposits = [{{
         "amount": 250
     }}]
 }},{{
-    "bank":            u"Сбербанк",
+    "bank":            "Сбербанк",
     "open_date":       "12.10.2009",
     "currency":        "AUR_SBRF",
     "amount":          100,
     "source_currency": "RUR"
 }}]"""
-
