@@ -1,23 +1,11 @@
-#!/usr/bin/env python
-
 """The application's startup module."""
 
 from __future__ import unicode_literals
 
-import sys
-if sys.version_info < (2, 6):
-    if __name__ == "__main__":
-        sys.exit("Error: pydeposits needs python >= 2.6.")
-    else:
-        raise Exception("pydeposits needs python >= 2.6")
-
-import os
-# Setting up the module paths.
-INSTALL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, INSTALL_DIR)
-
 import datetime
 import getopt
+import os
+import sys
 import traceback
 
 import pycl.log
