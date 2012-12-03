@@ -8,6 +8,7 @@ import datetime
 
 from pycl.cli.text_table import TextTable
 from pycl.core import Error, LogicalError
+from pycl.misc import to_system_encoding
 
 from pydeposits.rate_archive import RateArchive
 import pydeposits.constants as constants
@@ -20,8 +21,10 @@ def print_account_statement(holdings, today, show_all):
     holdings.sort(cmp = _holding_cmp)
 
     table = TextTable()
+
     total = Decimal(0)
     total_profit = Decimal(0)
+    current_total = Decimal(0)
 
     for holding in holdings:
         opened = not holding.get("closed", False)
@@ -40,10 +43,11 @@ def print_account_statement(holdings, today, show_all):
         _calculate_holding_info(holding, holding["close_date"] if expired else today)
 
         if opened:
-            total += holding.get("current_cost", 0)
+            total += holding.get("cost", 0)
+            current_total += holding.get("current_cost", 0)
             total_profit += holding.get("pure_profit", 0)
 
-        for key in ("amount", "rate_profit", "current_amount", "current_cost", "pure_profit"):
+        for key in ("amount", "cost", "rate_profit", "current_amount", "current_cost", "pure_profit"):
             if key in holding:
                 holding[key] = _round_normal(holding[key])
 
@@ -56,11 +60,14 @@ def print_account_statement(holdings, today, show_all):
 
     table.add_row({})
     table.add_row({
-        "current_cost": _round_normal(total),
-        "pure_profit":  _round_normal(total_profit)
+        "cost":         _round_normal(total),
+        "current_cost": _round_normal(current_total),
+        "pure_profit":  _round_normal(total_profit),
     })
 
-    print "\nAccount statement for {0}:\n".format(today)
+    print to_system_encoding(
+        "\nAccount statement for {0}:\n".format(today))
+
     table.draw([
         { "id": "expired",             "name": "Expiration",         "align": "center", "hide_if_empty": True },
         { "id": "open_date_string",    "name": "Open date",          "align": "center"                        },
@@ -69,6 +76,7 @@ def print_account_statement(holdings, today, show_all):
         { "id": "bank",                "name": "Bank",               "align": "center"                        },
         { "id": "currency",            "name": "Currency",           "align": "center"                        },
         { "id": "amount",              "name": "Amount"                                                       },
+        { "id": "cost",                "name": "Cost"                                                         },
         { "id": "interest",            "name": "Interest"                                                     },
         { "id": "rate_profit",         "name": "Rate profit"                                                  },
         { "id": "current_amount",      "name": "Current amount"                                               },
@@ -92,11 +100,14 @@ def print_expiring(holdings, today, days):
             expiring.append(holding)
 
     if expiring:
-        print "Following deposits will be expired in {0} days:".format(days)
+        print to_system_encoding(
+            "Following deposits will be expired in {0} days:".format(days))
+
         for holding in expiring:
-            print "  * {0} {1} ({2})".format(
-                holding["close_date"].strftime(constants.DATE_FORMAT),
-                holding["bank"], holding["currency"])
+            print to_system_encoding(
+                "  * {0} {1} ({2})".format(
+                    holding["close_date"].strftime(constants.DATE_FORMAT),
+                    holding["bank"], holding["currency"]))
 
 
 def _calculate_current_amount(holding, today):
@@ -186,9 +197,16 @@ def _calculate_holding_info(holding, today):
     _calculate_current_cost(holding, today)
     _calculate_pure_profit(holding, today)
 
+
+    rate_archive = RateArchive()
+
     for completion in holding.get("completions", []):
         if completion["date"] <= today:
             holding["amount"] += completion["amount"]
+
+    cur_rates = rate_archive.get_approx(holding["currency"], today)
+    if cur_rates is not None:
+        holding["cost"] = holding["amount"] * cur_rates[1]
 
 
 def _calculate_past_cost(holding, today):
