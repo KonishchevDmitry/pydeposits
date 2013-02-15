@@ -84,7 +84,7 @@ def get_rates(dates):
                         if url.startswith("/"):
                             url = url_prefix + url
 
-                        day_urls.setdefault(int(match[4]), url)
+                        day_urls.setdefault(int(match[4]), []).append(url)
                     else:
                         # If we ask for data that SBRF doesn't have, it returns data for previous month/year.
                         pass
@@ -93,13 +93,23 @@ def get_rates(dates):
             # Getting rates for the month <--
 
             # Getting XML file with rates for the date -->
-            url = day_urls.get(date.day)
-
-            if url:
-                xls_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
-            else:
+            if date.day not in day_urls:
                 LOG.debug("There is no data for SBRF's currency rates for %s...", date)
                 continue
+
+            for url in day_urls[date.day]:
+                try:
+                    xls_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
+                except urllib2.HTTPError as e:
+                    if e.code == 404:
+                        # It's a common error when we have 2 reports per day
+                        LOG.debug("Unable to download '%s': %s.", url, e)
+                    else:
+                        raise e
+                else:
+                    break
+            else:
+                raise e
             # Getting XML file with rates for the date <--
 
             try:
