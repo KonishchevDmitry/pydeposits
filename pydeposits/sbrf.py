@@ -25,7 +25,7 @@ def get_rates(dates):
     rates = {}
 
     rate_urls = {}
-    url_prefix = "http://sbrf.ru"
+    url_prefix = "http://sbrf.ru/"
     rate_list_re = re.compile(r"""<ul\s+class\s*=\s*["']docs["']\s*>(.*?)</ul>""",
         re.IGNORECASE | re.MULTILINE | re.DOTALL)
     rate_url_re = re.compile(r"""
@@ -54,7 +54,7 @@ def get_rates(dates):
             if day_urls is None:
                 day_urls = {}
 
-                url = "{0}/moscow/ru/valkprev/archive_1/index.php?year114={1}&month114={2}".format(
+                url = "{0}moscow/ru/valkprev/archive_1/index.php?year114={1}&month114={2}".format(
                     url_prefix, date.year, date.month)
 
                 rate_list_html = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
@@ -81,8 +81,8 @@ def get_rates(dates):
                 for match in matches:
                     if date.year == int(match[1]) and date.month == int(match[2]):
                         url = match[0]
-                        if url.startswith("/"):
-                            url = url_prefix + url
+                        if "://" not in url:
+                            url = url_prefix + url.lstrip("/")
 
                         day_urls.setdefault(int(match[4]), []).append(url)
                     else:
