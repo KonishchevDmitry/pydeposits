@@ -1,7 +1,5 @@
 """Stores and returns info about current and past currency rates."""
 
-from __future__ import unicode_literals
-
 from decimal import Decimal
 import datetime
 import errno
@@ -61,7 +59,7 @@ class RateArchive:
 
                 try:
                     os.makedirs(self._db_dir)
-                except EnvironmentError, e:
+                except EnvironmentError as e:
                     if e.errno != errno.EEXIST:
                         raise
 
@@ -78,7 +76,7 @@ class RateArchive:
                 db.commit()
 
                 RateArchive._db = db
-            except Exception, e:
+            except Exception as e:
                 raise Error("Unable to open database '{0}':", db_path).append(e)
 
         if RateArchive._todays_rates is None and not self._offline_mode:
@@ -147,8 +145,8 @@ class RateArchive:
 
         data = []
 
-        for date, currencies in rates.iteritems():
-            for currency, rates in currencies.iteritems():
+        for date, currencies in rates.items():
+            for currency, rates in currencies.items():
                 data.append((
                     util.get_day(date),
                     currency, str(rates[0]), str(rates[1])
@@ -178,7 +176,7 @@ class RateArchive:
 
         rates = {}
         for source in (cbrf, sbrf):
-            for date, new_rates in source.get_rates(dates).iteritems():
+            for date, new_rates in source.get_rates(dates).items():
                 rates.setdefault(date, {}).update(new_rates)
 
         todays_rates = rates.pop(today, {})

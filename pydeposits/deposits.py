@@ -2,13 +2,12 @@
 
 """Provides functions for parsing deposit info specified by the user."""
 
-from __future__ import unicode_literals
-
-from decimal import Decimal
 import datetime
 import imp
 import pprint
 import os
+
+from decimal import Decimal
 
 from pycl.core import Error, LogicalError
 
@@ -26,7 +25,7 @@ def get():
         deposits = imp.load_source("pydeposits.deposits.deposit_info", info_path).deposits
         if not isinstance(deposits, list):
             raise Error("deposits variable must be a list of dictionaries")
-    except Exception, e:
+    except Exception as e:
         raise Error("Failed to load deposit info from {0}:", info_path).append(e)
 
     fields = (
@@ -94,8 +93,8 @@ def get():
                     ):
                         raise Error("Invalid completion date.")
 
-                deposit["completions"].sort(lambda a, b: (a["date"] - b["date"]).days)
-        except Exception, e:
+                deposit["completions"].sort(key = lambda completion: completion["date"])
+        except Exception as e:
             raise Error("Invalid deposit info:\n{0}", pprint.pformat(deposit))
 
     if not deposits:

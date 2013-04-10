@@ -1,14 +1,13 @@
 """Provides a tools for getting deposit statements."""
 
-from __future__ import unicode_literals
-
-from decimal import Decimal
 import copy
 import datetime
+import time
+
+from decimal import Decimal
 
 from pycl.cli.text_table import TextTable
 from pycl.core import Error, LogicalError
-from pycl.misc import to_system_encoding
 
 from pydeposits.rate_archive import RateArchive
 import pydeposits.constants as constants
@@ -18,7 +17,7 @@ def print_account_statement(holdings, today, show_all):
     """Prints out current deposit statement."""
 
     holdings = copy.deepcopy(holdings)
-    holdings.sort(cmp = _holding_cmp)
+    holdings.sort(key = _holding_cmp_key)
 
     table = TextTable()
 
@@ -65,8 +64,7 @@ def print_account_statement(holdings, today, show_all):
         "pure_profit":  _round_normal(total_profit),
     })
 
-    print to_system_encoding(
-        "\nAccount statement for {0}:\n".format(today))
+    print("\nAccount statement for {0}:\n".format(today))
 
     table.draw([
         { "id": "expired",             "name": "Expiration",         "align": "center", "hide_if_empty": True },
@@ -91,7 +89,7 @@ def print_expiring(holdings, today, days):
 
     expiring = []
 
-    for holding in sorted(holdings, cmp = _holding_cmp, reverse = True):
+    for holding in sorted(holdings, key = _holding_cmp_key, reverse = True):
         if (
             not holding.get("closed", False) and
             "close_date" in holding and
@@ -100,14 +98,12 @@ def print_expiring(holdings, today, days):
             expiring.append(holding)
 
     if expiring:
-        print to_system_encoding(
-            "Following deposits will be expired in {0} days:".format(days))
+        print("Following deposits will be expired in {0} days:".format(days))
 
         for holding in expiring:
-            print to_system_encoding(
-                "  * {0} {1} ({2})".format(
-                    holding["close_date"].strftime(constants.DATE_FORMAT),
-                    holding["bank"], holding["currency"]))
+            print("  * {0} {1} ({2})".format(
+                holding["close_date"].strftime(constants.DATE_FORMAT),
+                holding["bank"], holding["currency"]))
 
 
 def _calculate_current_amount(holding, today):
@@ -273,13 +269,13 @@ def _days_in_year(year):
     return 366 if _is_leap_year(year) else 365
 
 
-def _holding_cmp(a, b):
+def _holding_cmp_key(holding):
     """Compares two holdings (for printing them out)."""
 
     return (
-        ( ("close_date" in a) - ("close_date" in b) ) or
-        ( b.get("close_date", datetime.date.today()) - a.get("close_date", datetime.date.today()) ).days or
-        cmp(a["bank"], b["bank"])
+        "close_date" in holding,
+        -time.mktime(holding.get("close_date", datetime.date.today()).timetuple()),
+        holding["bank"]
     )
 
 

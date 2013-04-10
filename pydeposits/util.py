@@ -1,7 +1,5 @@
 """Contains various utils."""
 
-from __future__ import unicode_literals
-
 import datetime
 
 def get_day(date):

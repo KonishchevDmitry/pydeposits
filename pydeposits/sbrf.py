@@ -2,13 +2,12 @@
 
 """Contains tools for getting rate info from Sberbank."""
 
-from __future__ import unicode_literals
-
-from decimal import Decimal
 import datetime
 import logging
 import re
-import urllib2
+import urllib.request
+
+from decimal import Decimal
 
 import xlrd
 
@@ -57,7 +56,9 @@ def get_rates(dates):
                 url = "{0}moscow/ru/valkprev/archive_1/index.php?year114={1}&month114={2}".format(
                     url_prefix, date.year, date.month)
 
-                rate_list_html = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
+                rate_list_html = urllib.request.urlopen(
+                    url, timeout = constants.NETWORK_TIMEOUT).read().decode("cp1251")
+
                 match = rate_list_re.search(rate_list_html)
                 if not match:
                     raise Error("server returned unknown HTML response")
@@ -99,8 +100,9 @@ def get_rates(dates):
 
             for url in day_urls[date.day]:
                 try:
-                    xls_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
-                except urllib2.HTTPError as e:
+                    xls_contents = urllib.request.urlopen(
+                        url, timeout = constants.NETWORK_TIMEOUT).read()
+                except urllib.request.HTTPError as e:
                     if e.code == 404:
                         # It's a common error when we have 2 reports per day
                         LOG.debug("Unable to download '%s': %s.", url, e)
@@ -126,7 +128,7 @@ def get_rates(dates):
             for id, sheet in enumerate(xls.sheets()):
                 empty = True
 
-                for row_id in xrange(0, sheet.nrows):
+                for row_id in range(0, sheet.nrows):
                     for cell in sheet.row(row_id):
                         if cell.ctype == xlrd.XL_CELL_TEXT and cell.value.strip():
                             empty = False
@@ -150,7 +152,7 @@ def get_rates(dates):
             # Search for the title of the rate table -->
             rates_title_found = False
 
-            for row_id in xrange(0, sheet.nrows):
+            for row_id in range(0, sheet.nrows):
                 row = sheet.row(row_id)
 
                 for cell in row:

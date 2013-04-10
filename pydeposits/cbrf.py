@@ -1,10 +1,8 @@
 """Contains tools for getting rate info from The Central Bank of the Russian Federation."""
 
-from __future__ import unicode_literals
-
 from decimal import Decimal
 import logging
-import urllib2
+import urllib.request
 import xml.dom.minidom
 
 from pycl.core import Error
@@ -25,7 +23,7 @@ def get_rates(dates):
             url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" \
                     "{0:02d}/{1:02d}/{2}".format(date.day, date.month, date.year)
 
-            xml_contents = urllib2.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
+            xml_contents = urllib.request.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
             dom = xml.dom.minidom.parseString(xml_contents)
 
             date_rates = {}

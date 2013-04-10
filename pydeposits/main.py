@@ -1,7 +1,5 @@
 """The application's startup module."""
 
-from __future__ import unicode_literals
-
 import datetime
 import getopt
 import os
@@ -9,8 +7,6 @@ import sys
 import traceback
 
 import pycl.log
-import pycl.main
-import pycl.misc
 from pycl.core import EE, Error, LogicalError
 
 from pydeposits import constants
@@ -28,14 +24,10 @@ def main():
     show_expiring = None
     today = datetime.date.today()
 
-    pycl.main.setup_environment()
-
     try:
         # Parsing command line options -->
         try:
-            argv = [ pycl.misc.to_unicode(arg) for arg in sys.argv ]
-
-            cmd_options, cmd_args = getopt.gnu_getopt(argv[1:],
+            cmd_options, cmd_args = getopt.gnu_getopt(sys.argv[1:],
                 "ade:hot:", [ "all", "debug-mode", "expiring=", "help", "offline-mode", "today=" ] )
 
             for option, value in cmd_options:
@@ -48,7 +40,7 @@ def main():
                         show_expiring = int(value)
                         if show_expiring < 0:
                             raise Exception("negative number")
-                    except Exception, e:
+                    except Exception as e:
                         raise Error("Invalid number of days ({0}).", value)
                 elif option in ("-h", "--help"):
                     print (
@@ -68,17 +60,17 @@ def main():
                 elif option in ("-t", "--today"):
                     try:
                         today = datetime.datetime.strptime(value, constants.DATE_FORMAT).date()
-                    except Exception, e:
+                    except Exception as e:
                         raise Error("Invalid today date ({0}).", value)
                 else:
                     raise LogicalError()
             if len(cmd_args):
                 raise Error("'{0}' is not recognized", cmd_args[0])
-        except Exception, e:
+        except Exception as e:
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--
 
-        pycl.log.setup(debug_mode)
+        pycl.log.setup(debug_mode = debug_mode)
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))
@@ -86,15 +78,15 @@ def main():
 
         try:
             deposits = pydeposits.deposits.get()
-        except Error, e:
+        except Error as e:
             # To print exact error string without any modifications by EE().
-            sys.exit(unicode(e))
+            sys.exit(str(e))
 
         if show_expiring is not None:
             pydeposits.statements.print_expiring(deposits, today, show_expiring)
         else:
             pydeposits.statements.print_account_statement(deposits, today, show_all)
-    except Exception, e:
+    except Exception as e:
         if debug_mode:
             traceback.print_exc()
             sys.exit(1)
