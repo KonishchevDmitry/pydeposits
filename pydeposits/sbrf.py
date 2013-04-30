@@ -24,7 +24,7 @@ def get_rates(dates):
     rates = {}
 
     rate_urls = {}
-    url_prefix = "http://sbrf.ru/"
+    url_prefix = "http://sberbank.ru/"
     rate_list_re = re.compile(r"""<ul\s+class\s*=\s*["']docs["']\s*>(.*?)</ul>""",
         re.IGNORECASE | re.MULTILINE | re.DOTALL)
     rate_url_re = re.compile(r"""
