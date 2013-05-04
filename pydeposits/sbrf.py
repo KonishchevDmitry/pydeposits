@@ -71,8 +71,12 @@ def get_rates(dates):
                     if (
                         datetime.date.today().month == date.month and (
                             (date - datetime.date(date.year, date.month, 1)).days <= 2 or
+
                             # Long New Year holidays
-                            date.month == 1 and (date - datetime.date(date.year, date.month, 1)).days <= 10
+                            date.month == 1 and (date - datetime.date(date.year, date.month, 1)).days <= 10 or
+
+                            # Long holidays in May
+                            date.month == 5 and (date - datetime.date(date.year, date.month, 1)).days <= 6
                         )
                     ):
                         continue
