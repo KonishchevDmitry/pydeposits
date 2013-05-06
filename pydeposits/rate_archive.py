@@ -103,6 +103,7 @@ class RateArchive:
             return ( Decimal(1), Decimal(1) )
 
         day = util.get_day(date)
+        today = util.get_day(datetime.date.today())
 
         rates = [ rate for rate in self._db.execute("""
             SELECT
@@ -118,9 +119,9 @@ class RateArchive:
         if (
             self._todays_rates is not None and
             currency in self._todays_rates and
-            day - MIN_RATE_ACCURACY <= util.get_day(datetime.date.today()) <= day + MIN_RATE_ACCURACY
+            day - MIN_RATE_ACCURACY <= today <= day + MIN_RATE_ACCURACY
         ):
-            rates.append(self._todays_rates[currency])
+            rates.append((today,) + self._todays_rates[currency])
 
         nearest = None
         for rate in rates:
