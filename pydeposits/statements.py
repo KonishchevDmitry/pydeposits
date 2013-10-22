@@ -6,8 +6,9 @@ import time
 
 from decimal import Decimal
 
-from pycl.cli.text_table import TextTable
 from pycl.core import Error, LogicalError
+
+from pcli.text_table import Table, Column
 
 from pydeposits.rate_archive import RateArchive
 import pydeposits.constants as constants
@@ -16,10 +17,25 @@ import pydeposits.constants as constants
 def print_account_statement(holdings, today, show_all):
     """Prints out current deposit statement."""
 
+    table = Table([
+        Column("expired",             "Expiration",         align=Column.ALIGN_CENTER, hide_if_empty=True),
+        Column("open_date_string",    "Open date",          align=Column.ALIGN_CENTER                    ),
+        Column("close_date_string",   "Close date",         align=Column.ALIGN_CENTER                    ),
+        Column("closed",              "Closed",             align=Column.ALIGN_CENTER, hide_if_empty=True),
+        Column("bank",                "Bank",               align=Column.ALIGN_CENTER                    ),
+        Column("currency",            "Currency",           align=Column.ALIGN_CENTER                    ),
+        Column("amount",              "Amount"                                                           ),
+        Column("cost",                "Cost"                                                             ),
+        Column("interest",            "Interest"                                                         ),
+        Column("rate_profit",         "Rate profit"                                                      ),
+        Column("current_amount",      "Current amount"                                                   ),
+        Column("current_cost",        "Current cost"                                                     ),
+        Column("pure_profit",         "Pure profit"                                                      ),
+        Column("pure_profit_percent", "Pure profit persent"                                              ),
+    ])
+
     holdings = copy.deepcopy(holdings)
     holdings.sort(key = _holding_cmp_key)
-
-    table = TextTable()
 
     total = Decimal(0)
     total_profit = Decimal(0)
@@ -64,24 +80,7 @@ def print_account_statement(holdings, today, show_all):
         "pure_profit":  _round_normal(total_profit),
     })
 
-    print("\nAccount statement for {0}:\n".format(today))
-
-    table.draw([
-        { "id": "expired",             "name": "Expiration",         "align": "center", "hide_if_empty": True },
-        { "id": "open_date_string",    "name": "Open date",          "align": "center"                        },
-        { "id": "close_date_string",   "name": "Close date",         "align": "center"                        },
-        { "id": "closed",              "name": "Closed",             "align": "center", "hide_if_empty": True },
-        { "id": "bank",                "name": "Bank",               "align": "center"                        },
-        { "id": "currency",            "name": "Currency",           "align": "center"                        },
-        { "id": "amount",              "name": "Amount"                                                       },
-        { "id": "cost",                "name": "Cost"                                                         },
-        { "id": "interest",            "name": "Interest"                                                     },
-        { "id": "rate_profit",         "name": "Rate profit"                                                  },
-        { "id": "current_amount",      "name": "Current amount"                                               },
-        { "id": "current_cost",        "name": "Current cost"                                                 },
-        { "id": "pure_profit",         "name": "Pure profit"                                                  },
-        { "id": "pure_profit_percent", "name": "Pure profit persent"                                          },
-    ])
+    print(); table.draw("Account statement for {0}:".format(today))
 
 
 def print_expiring(holdings, today, days):
