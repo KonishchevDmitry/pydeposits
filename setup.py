@@ -11,6 +11,7 @@ with open("README") as readme:
         url = "https://github.com/KonishchevDmitry/pydeposits",
 
         install_requires = [ "pycl", "xlrd" ],
+        dependency_links = [ "http://github.com/KonishchevDmitry/pycl/tarball/master#egg=pycl" ],
 
         author = "Dmitry Konishchev",
         author_email = "konishchev@gmail.com",
