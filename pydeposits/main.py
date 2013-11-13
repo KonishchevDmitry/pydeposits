@@ -6,7 +6,7 @@ import os
 import sys
 import traceback
 
-import pycl.log
+import pcli.log
 from pycl.core import EE, Error, LogicalError
 
 from pydeposits import constants
@@ -70,7 +70,7 @@ def main():
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--
 
-        pycl.log.setup(debug_mode = debug_mode)
+        pcli.log.setup(debug_mode = debug_mode)
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))
