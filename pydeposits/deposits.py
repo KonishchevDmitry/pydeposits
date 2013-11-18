@@ -9,9 +9,8 @@ import os
 
 from decimal import Decimal
 
-from pycl.core import Error, LogicalError
-
 from pydeposits import constants
+from pydeposits.util import Error
 
 
 def get():
@@ -19,14 +18,14 @@ def get():
 
     info_path = os.path.join(os.path.expanduser("~/." + constants.APP_UNIX_NAME), "deposits.py")
     if not os.path.exists(info_path):
-        raise Error(_NO_DEPOSIT_INFO_ERROR_MESSAGE.format(info_path))
+        raise Error(_NO_DEPOSIT_INFO_ERROR_MESSAGE, info_path)
 
     try:
         deposits = imp.load_source("pydeposits.deposits.deposit_info", info_path).deposits
         if not isinstance(deposits, list):
             raise Error("deposits variable must be a list of dictionaries")
     except Exception as e:
-        raise Error("Failed to load deposit info from {0}:", info_path).append(e)
+        raise Error("Failed to load deposit info from {}:", info_path).append(e)
 
     fields = (
         # TODO: source amount
@@ -57,7 +56,7 @@ def get():
             for field_name, type_name, required in fields:
                 if field_name not in deposit:
                     if required:
-                        raise Error("there is no required field {0}", field_name)
+                        raise Error("there is no required field {}", field_name)
                     else:
                         continue
 
@@ -83,7 +82,7 @@ def get():
                 elif type_name == "decimal":
                     deposit[field_name] = Decimal(str(deposit[field_name]))
                 else:
-                    raise LogicalError()
+                    raise Error("Logical error.")
 
             if "completions" in deposit:
                 for completion in deposit["completions"]:
@@ -95,7 +94,7 @@ def get():
 
                 deposit["completions"].sort(key = lambda completion: completion["date"])
         except Exception as e:
-            raise Error("Invalid deposit info:\n{0}", pprint.pformat(deposit))
+            raise Error("Invalid deposit info:\n{}", pprint.pformat(deposit))
 
     if not deposits:
         raise Error("You specified an empty deposit list.")

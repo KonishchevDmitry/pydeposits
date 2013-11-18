@@ -11,8 +11,8 @@ from decimal import Decimal
 
 import xlrd
 
-from pycl.core import Error
 from pydeposits import constants
+from pydeposits.util import Error
 
 LOG = logging.getLogger("pydeposits.sbrf")
 
@@ -218,7 +218,7 @@ def get_rates(dates):
                         data.append(cell.value)
 
                 if len(data) != 3 or data[0] != ru_name:
-                    raise Error("Unable to find {0}'s rate.", name)
+                    raise Error("Unable to find {}'s rate.", name)
 
                 date_rates[name] = ( Decimal(str(data[1])), Decimal(str(data[2])) )
 
@@ -229,6 +229,6 @@ def get_rates(dates):
 
             LOG.debug("Gotten rates: %s", date_rates)
         except Exception as e:
-            raise Error("Unable to get rate info from Sberbank for {0}:", date).append(e)
+            raise Error("Unable to get rate info from Sberbank for {}:", date).append(e)
 
     return rates

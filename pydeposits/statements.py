@@ -6,12 +6,11 @@ import time
 
 from decimal import Decimal
 
-from pycl.core import Error, LogicalError
-
 from pcli.text_table import Table, Column
 
-from pydeposits.rate_archive import RateArchive
 import pydeposits.constants as constants
+from pydeposits.rate_archive import RateArchive
+from pydeposits.util import Error
 
 
 def print_account_statement(holdings, today, show_all):
@@ -166,7 +165,7 @@ def _calculate_current_amount(holding, today):
             except ValueError:
                 next_date_day -= 1
                 if next_date_day < 0:
-                    raise LogicalError()
+                    raise Error("Logical error.")
             else:
                 break
 

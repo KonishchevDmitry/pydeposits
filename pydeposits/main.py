@@ -7,12 +7,13 @@ import sys
 import traceback
 
 import pcli.log
-from pycl.core import EE, Error, LogicalError
+
+import pydeposits.deposits
+import pydeposits.statements
 
 from pydeposits import constants
 from pydeposits.rate_archive import RateArchive
-import pydeposits.deposits
-import pydeposits.statements
+from pydeposits.util import EE, Error
 
 
 def main():
@@ -41,7 +42,7 @@ def main():
                         if show_expiring < 0:
                             raise Exception("negative number")
                     except Exception as e:
-                        raise Error("Invalid number of days ({0}).", value)
+                        raise Error("Invalid number of days ({}).", value)
                 elif option in ("-h", "--help"):
                     print (
                         """pydeposits [OPTIONS]\n\n"""
@@ -61,11 +62,11 @@ def main():
                     try:
                         today = datetime.datetime.strptime(value, constants.DATE_FORMAT).date()
                     except Exception as e:
-                        raise Error("Invalid today date ({0}).", value)
+                        raise Error("Invalid today date ({}).", value)
                 else:
-                    raise LogicalError()
+                    raise Error("Logical error.")
             if len(cmd_args):
-                raise Error("'{0}' is not recognized", cmd_args[0])
+                raise Error("'{}' is not recognized", cmd_args[0])
         except Exception as e:
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--

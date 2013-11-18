@@ -10,8 +10,7 @@ with open("README") as readme:
         long_description = readme.read().strip(),
         url = "https://github.com/KonishchevDmitry/pydeposits",
 
-        install_requires = [ "pcli >= 0.2", "pycl", "xlrd" ],
-        dependency_links = [ "http://github.com/KonishchevDmitry/pycl/tarball/master#egg=pycl" ],
+        install_requires = [ "pcli >= 0.2", "xlrd" ],
 
         author = "Dmitry Konishchev",
         author_email = "konishchev@gmail.com",

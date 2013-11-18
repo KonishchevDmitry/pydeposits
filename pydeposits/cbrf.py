@@ -5,8 +5,8 @@ import logging
 import urllib.request
 import xml.dom.minidom
 
-from pycl.core import Error
 from pydeposits import constants
+from pydeposits.util import Error
 
 LOG = logging.getLogger("pydeposits.cbrf")
 
@@ -41,7 +41,7 @@ def get_rates(dates):
                         rate = node.data
                         break
                 else:
-                    raise Error("Unable to get currency rate for {0}.", name)
+                    raise Error("Unable to get currency rate for {}.", name)
 
                 date_rates[name] = ( Decimal(rate.replace(",", ".")), ) * 2
 
@@ -50,6 +50,6 @@ def get_rates(dates):
 
             rates[date] = date_rates
         except Exception as e:
-            raise Error("Unable to get rate info from The Central Bank of the Russian Federation for {0}:", date).append(e)
+            raise Error("Unable to get rate info from The Central Bank of the Russian Federation for {}:", date).append(e)
 
     return rates

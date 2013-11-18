@@ -7,12 +7,11 @@ import logging
 import os
 import sqlite3
 
-from pycl.core import Error
-
 from pydeposits import cbrf
 from pydeposits import constants
 from pydeposits import sbrf
 from pydeposits import util
+from pydeposits.util import Error
 
 LOG = logging.getLogger("pydeposits.rate_archive")
 
@@ -77,7 +76,7 @@ class RateArchive:
 
                 RateArchive._db = db
             except Exception as e:
-                raise Error("Unable to open database '{0}':", db_path).append(e)
+                raise Error("Unable to open database '{}':", db_path).append(e)
 
         if RateArchive._todays_rates is None and not self._offline_mode:
             try:
