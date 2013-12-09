@@ -1,9 +1,11 @@
 """Contains tools for getting rate info from The Central Bank of the Russian Federation."""
 
-from decimal import Decimal
+import http.cookiejar
 import logging
 import urllib.request
 import xml.dom.minidom
+
+from decimal import Decimal
 
 from pydeposits import constants
 from pydeposits.util import Error
@@ -16,6 +18,10 @@ def get_rates(dates):
 
     rates = {}
 
+    # www.cbr.ru sometimes requires cookies for some reason
+    cookies = http.cookiejar.CookieJar()
+    url_opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookies))
+
     for date in dates:
         try:
             LOG.info("Getting CBRF's currency rates for %s...", date)
@@ -23,7 +29,7 @@ def get_rates(dates):
             url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" \
                     "{0:02d}/{1:02d}/{2}".format(date.day, date.month, date.year)
 
-            xml_contents = urllib.request.urlopen(url, timeout = constants.NETWORK_TIMEOUT).read()
+            xml_contents = url_opener.open(url, timeout = constants.NETWORK_TIMEOUT).read()
             dom = xml.dom.minidom.parseString(xml_contents)
 
             date_rates = {}
