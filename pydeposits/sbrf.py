@@ -110,12 +110,13 @@ def get_rates(dates):
                     if e.code == 404:
                         # It's a common error when we have 2 reports per day
                         LOG.debug("Unable to download '%s': %s.", url, e)
+                        error = e
                     else:
                         raise e
                 else:
                     break
             else:
-                raise e
+                raise error
             # Getting XML file with rates for the date <--
 
             try:
