@@ -22,21 +22,15 @@ def get_rates(dates):
     """Returns Sberbank's rates for a specified dates."""
 
     rates = {}
-
     rate_urls = {}
     url_prefix = "http://sberbank.ru/"
-    rate_list_re = re.compile(r"""<ul\s+class\s*=\s*["']docs["']\s*>(.*?)</ul>""",
-        re.IGNORECASE | re.MULTILINE | re.DOTALL)
-    rate_url_re = re.compile(r"""
-        <li\s+class\s*=\s*["']xls["']>\s*
-            <a\s+href\s*=\s*["'](
-                # URLs may be:
-                # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls"
-                # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls"
-                # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls"
-                [^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2})(_\d)?.xls
-            )["']
-    """, re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE)
+
+    # URLs may be:
+    # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls
+    # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls
+    # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls
+    rate_url_re = re.compile(
+        r"""["'][^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2})(_\d)?.xls["']""")
 
     for date in dates:
         try:
@@ -53,16 +47,11 @@ def get_rates(dates):
             if day_urls is None:
                 day_urls = {}
 
-                url = "{0}moscow/ru/valkprev/archive_1/index.php?year114={1}&month114={2}".format(
+                url = "{0}moscow/ru/quotes/archivoms/index.php?year115={1}&month115={2}".format(
                     url_prefix, date.year, date.month)
 
                 rate_list_html = urllib.request.urlopen(
                     url, timeout = constants.NETWORK_TIMEOUT).read().decode("cp1251")
-
-                match = rate_list_re.search(rate_list_html)
-                if not match:
-                    raise Error("server returned unknown HTML response")
-                rate_list_html = match.group(1)
 
                 matches = rate_url_re.findall(rate_list_html)
                 if not matches:
