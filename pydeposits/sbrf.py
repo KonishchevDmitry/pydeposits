@@ -23,7 +23,7 @@ def get_rates(dates):
 
     rates = {}
     rate_urls = {}
-    url_prefix = "http://sberbank.ru/"
+    url_prefix = "http://data.sberbank.ru/"
 
     # URLs may be:
     # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls
