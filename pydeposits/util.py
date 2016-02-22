@@ -2,6 +2,11 @@
 
 import datetime
 
+import requests
+from requests import RequestException
+
+from pydeposits import constants
+
 
 class Error(Exception):
     """The base class for all exceptions that our code throws."""
@@ -66,3 +71,14 @@ def get_day(date):
     """Converts a date to day number from UNIX epoch."""
 
     return (date - datetime.date.fromtimestamp(0)).days
+
+
+def fetch_url(url):
+    """Fetches the specified URL."""
+
+    response = requests.get(url, timeout=constants.NETWORK_TIMEOUT)
+    if response.status_code != requests.codes.ok:
+        raise RequestException("Server returned an error: {} {}.".format(response.status_code, response.reason),
+                               response=response)
+
+    return response
