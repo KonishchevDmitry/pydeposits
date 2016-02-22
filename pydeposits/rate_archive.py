@@ -48,14 +48,13 @@ class RateArchive:
     _todays_rates = None
     """Rates for today."""
 
-
     def __init__(self):
         if RateArchive._db is None:
-            try:
-                if self._db_dir is None:
-                    self._db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
-                db_path = os.path.join(self._db_dir, "rates.sqlite")
+            if self._db_dir is None:
+                self._db_dir = os.path.expanduser("~/." + constants.APP_UNIX_NAME)
+            db_path = os.path.join(self._db_dir, "rates.sqlite")
 
+            try:
                 try:
                     os.makedirs(self._db_dir)
                 except EnvironmentError as e:
@@ -84,13 +83,11 @@ class RateArchive:
             except Exception as e:
                 raise Error("Unable to update rate info.").append(e)
 
-
     @classmethod
     def enable_offline_mode(cls, value):
         """Enables/disables the offline mode."""
 
         cls._offline_mode = value
-
 
     def get_approx(self, currency, date):
         """
@@ -130,15 +127,13 @@ class RateArchive:
         if nearest is None:
             return None
         else:
-            return ( Decimal(nearest[1]), Decimal(nearest[2]) )
-
+            return (Decimal(nearest[1]), Decimal(nearest[2]))
 
     @classmethod
     def set_db_dir(cls, path):
         """Sets custom database directory."""
 
         cls._db_dir = path
-
 
     def __add(self, rates):
         """Saves new rate info."""
@@ -154,7 +149,6 @@ class RateArchive:
 
         self._db.executemany("INSERT INTO rates VALUES (?, ?, ?, ?)", data)
         self._db.commit()
-
 
     def __update(self):
         """Updates currency rate info."""

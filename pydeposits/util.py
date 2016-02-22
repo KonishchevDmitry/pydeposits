@@ -9,7 +9,6 @@ class Error(Exception):
     def __init__(self, error, *args):
         Exception.__init__(self, error.format(*args) if len(args) else error)
 
-
     def append(self, error, *args):
         """Appends a new error text to this error."""
 

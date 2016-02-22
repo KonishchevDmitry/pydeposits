@@ -29,7 +29,7 @@ def get_rates(dates):
             url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" \
                     "{0:02d}/{1:02d}/{2}".format(date.day, date.month, date.year)
 
-            xml_contents = url_opener.open(url, timeout = constants.NETWORK_TIMEOUT).read()
+            xml_contents = url_opener.open(url, timeout=constants.NETWORK_TIMEOUT).read()
             dom = xml.dom.minidom.parseString(xml_contents)
 
             date_rates = {}
@@ -49,7 +49,7 @@ def get_rates(dates):
                 else:
                     raise Error("Unable to get currency rate for {}.", name)
 
-                date_rates[name] = ( Decimal(rate.replace(",", ".")), ) * 2
+                date_rates[name] = (Decimal(rate.replace(",", ".")),) * 2
 
             if not date_rates:
                 raise Error("Empty XML document gotten.")

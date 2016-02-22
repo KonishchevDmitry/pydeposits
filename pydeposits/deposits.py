@@ -29,16 +29,16 @@ def get():
 
     fields = (
         # TODO: source amount
-        ( "bank",            "string",  True  ),
-        ( "open_date",       "date",    True  ),
-        ( "close_date",      "date",    False ),
-        ( "currency",        "string",  True  ),
-        ( "source_currency", "string",  False ),
-        ( "amount",          "decimal", True  ),
-        ( "interest",        "decimal", False ),
-        ( "capitalization",  "decimal", False ),
-        ( "completions",     "",        False ),
-        ( "closed",          "bool",    False ),
+        ("bank",            "string",  True ),
+        ("open_date",       "date",    True ),
+        ("close_date",      "date",    False),
+        ("currency",        "string",  True ),
+        ("source_currency", "string",  False),
+        ("amount",          "decimal", True ),
+        ("interest",        "decimal", False),
+        ("capitalization",  "decimal", False),
+        ("completions",     "",        False),
+        ("closed",          "bool",    False),
     )
 
     field_names = set()
@@ -61,7 +61,7 @@ def get():
                         continue
 
                 if field_name == "completions":
-                    completion_fields = set(( "date", "amount" ))
+                    completion_fields = {"date", "amount"}
 
                     if not isinstance(deposit["completions"], list):
                         raise Error("Invalid field type.")
@@ -92,8 +92,8 @@ def get():
                     ):
                         raise Error("Invalid completion date.")
 
-                deposit["completions"].sort(key = lambda completion: completion["date"])
-        except Exception as e:
+                deposit["completions"].sort(key=lambda completion: completion["date"])
+        except Exception:
             raise Error("Invalid deposit info:\n{}", pprint.pformat(deposit))
 
     if not deposits:

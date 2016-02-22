@@ -51,7 +51,7 @@ def get_rates(dates):
                     url_prefix, date.year, date.month)
 
                 rate_list_html = urllib.request.urlopen(
-                    url, timeout = constants.NETWORK_TIMEOUT).read().decode("cp1251")
+                    url, timeout=constants.NETWORK_TIMEOUT).read().decode("cp1251")
 
                 matches = rate_url_re.findall(rate_list_html)
                 if not matches:
@@ -94,7 +94,7 @@ def get_rates(dates):
             for url in day_urls[date.day]:
                 try:
                     xls_contents = urllib.request.urlopen(
-                        url, timeout = constants.NETWORK_TIMEOUT).read()
+                        url, timeout=constants.NETWORK_TIMEOUT).read()
                 except urllib.request.HTTPError as e:
                     if e.code == 404:
                         # It's a common error when we have 2 reports per day
@@ -109,7 +109,7 @@ def get_rates(dates):
             # Getting XML file with rates for the date <--
 
             try:
-                xls = xlrd.open_workbook(file_contents = xls_contents)
+                xls = xlrd.open_workbook(file_contents=xls_contents)
             except Exception as e:
                 LOG.error("Unable to read data for SBRF's currency rates for %s: %s.", date, e)
                 continue

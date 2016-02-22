@@ -14,4 +14,3 @@ NETWORK_TIMEOUT = 30
 
 DATE_FORMAT = "%d.%m.%Y"
 """Default date format."""
-

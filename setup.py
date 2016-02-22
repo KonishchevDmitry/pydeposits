@@ -2,21 +2,21 @@ from setuptools import find_packages, setup
 
 with open("README") as readme:
     setup(
-        name = "pydeposits",
-        version = "1.1.3",
+        name="pydeposits",
+        version="1.1.3",
 
-        license = "GPL",
-        description = readme.readline().strip(),
-        long_description = readme.read().strip(),
-        url = "https://github.com/KonishchevDmitry/pydeposits",
+        license="GPL",
+        description=readme.readline().strip(),
+        long_description=readme.read().strip(),
+        url="https://github.com/KonishchevDmitry/pydeposits",
 
-        install_requires = [ "pcli >= 0.2", "xlrd" ],
+        install_requires=["pcli >= 0.2", "xlrd"],
 
-        author = "Dmitry Konishchev",
-        author_email = "konishchev@gmail.com",
+        author="Dmitry Konishchev",
+        author_email="konishchev@gmail.com",
 
-        packages = find_packages(),
-        entry_points = {
-            "console_scripts": [ "pydeposits = pydeposits.main:main" ],
+        packages=find_packages(),
+        entry_points={
+            "console_scripts": ["pydeposits = pydeposits.main:main"],
         },
     )

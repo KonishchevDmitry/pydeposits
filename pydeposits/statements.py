@@ -34,7 +34,7 @@ def print_account_statement(holdings, today, show_all):
     ])
 
     holdings = copy.deepcopy(holdings)
-    holdings.sort(key = _holding_cmp_key)
+    holdings.sort(key=_holding_cmp_key)
 
     total = Decimal(0)
     total_profit = Decimal(0)
@@ -87,7 +87,7 @@ def print_expiring(holdings, today, days):
 
     expiring = []
 
-    for holding in sorted(holdings, key = _holding_cmp_key, reverse = True):
+    for holding in sorted(holdings, key=_holding_cmp_key, reverse=True):
         if (
             not holding.get("closed", False) and
             "close_date" in holding and
@@ -145,7 +145,7 @@ def _calculate_current_amount(holding, today):
 
         if cur_date == to_date:
             amount += profit
-            break;
+            break
 
         month += 1
         if "capitalization" in holding and month and month % holding["capitalization"] == 0:
@@ -243,7 +243,8 @@ def _calculate_pure_profit(holding, today):
             if holding["past_cost"] == 0 or today == holding["open_date"]:
                 holding["pure_profit_percent"] = Decimal(0)
             else:
-                holding["pure_profit_percent"] = ( holding["pure_profit"] / holding["past_cost"] ) * 100 / (today - holding["open_date"]).days * _days_in_year(today.year)
+                holding["pure_profit_percent"] = (holding["pure_profit"] / holding["past_cost"]) * 100 \
+                                                 / (today - holding["open_date"]).days * _days_in_year(today.year)
 
 
 def _calculate_rate_profit(holding, today):
@@ -281,13 +282,13 @@ def _is_leap_year(year):
     """Returns True if year is a leap year."""
 
     if year % 400 == 0:
-         return True
+        return True
     elif year % 100 == 0:
-         return False
+        return False
     elif year % 4 == 0:
-         return True
+        return True
     else:
-         return False
+        return False
 
 
 def _round_normal(value):

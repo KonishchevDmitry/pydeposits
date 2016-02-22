@@ -41,7 +41,7 @@ def main():
                         show_expiring = int(value)
                         if show_expiring < 0:
                             raise Exception("negative number")
-                    except Exception as e:
+                    except Exception:
                         raise Error("Invalid number of days ({}).", value)
                 elif option in ("-h", "--help"):
                     print (
@@ -71,7 +71,7 @@ def main():
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--
 
-        pcli.log.setup(debug_mode = debug_mode)
+        pcli.log.setup(debug_mode=debug_mode)
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))
