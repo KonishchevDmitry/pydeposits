@@ -13,7 +13,7 @@ from pydeposits import sbrf
 from pydeposits import util
 from pydeposits.util import Error
 
-LOG = logging.getLogger("pydeposits.rate_archive")
+log = logging.getLogger(__name__)
 
 
 MIN_RATE_ACCURACY = 10
@@ -23,7 +23,7 @@ In Russia we celebrate the new year for 10 days, so banks may not provide any
 info for this days.
 """
 
-ARCHIVE_PERIOD_AT_FIRST_START = 10 * 365
+ARCHIVE_PERIOD_AT_FIRST_START = 3 * 365
 """Number of days for which rate data will be downloaded at first start."""
 
 
@@ -158,7 +158,7 @@ class RateArchive:
         if last_date:
             min_date = datetime.date.fromtimestamp(0) + datetime.timedelta(last_date + 1)
         else:
-            LOG.info("Downloading currency rate archive. It may take a lot of time, please wait...")
+            log.info("Downloading currency rate archive. It may take a lot of time, please wait...")
             min_date = datetime.date.today() - datetime.timedelta(ARCHIVE_PERIOD_AT_FIRST_START)
 
         dates = []

@@ -71,7 +71,7 @@ def main():
             raise Error("Invalid arguments:").append(e)
         # Parsing command line options <--
 
-        pcli.log.setup(debug_mode=debug_mode)
+        pcli.log.setup(name="pydeposits", debug_mode=debug_mode)
 
         if debug_mode:
             RateArchive.set_db_dir(os.path.abspath("."))

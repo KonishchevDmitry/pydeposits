@@ -10,7 +10,7 @@ from decimal import Decimal
 from pydeposits import constants
 from pydeposits.util import Error
 
-LOG = logging.getLogger("pydeposits.cbrf")
+log = logging.getLogger(__name__)
 
 
 def get_rates(dates):
@@ -24,7 +24,7 @@ def get_rates(dates):
 
     for date in dates:
         try:
-            LOG.info("Getting CBRF's currency rates for %s...", date)
+            log.info("Getting CBRF's currency rates for %s...", date)
 
             url = "http://www.cbr.ru/scripts/XML_daily.asp?date_req=" \
                     "{0:02d}/{1:02d}/{2}".format(date.day, date.month, date.year)

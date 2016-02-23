@@ -20,33 +20,22 @@ from pydeposits.xls import RowNotFoundError, find_table, cmp_columns, cmp_column
 log = logging.getLogger(__name__)
 
 
-# TODO: get all rates per day
-# FIXME
 def get_rates(dates):
-    """Returns Sberbank's rates for a specified dates."""
+    """Returns Sberbank's rates for the specified dates."""
 
     rates = {}
-    rate_urls = {}
-
-    # URLs may be:
-    # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls
-    # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls
-    # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls
+    sources = (_CurrencyRates(), _MetalRates())
 
     for date in dates:
-        try:
-            self.get_for_date()
-        except Exception as e:
-            raise Error("Unable to get rate info from Sberbank for {}:", date).append(e)
-
-    # FIXME
-    date_rates = rates.setdefault(date, {})
+        for source in sources:
+            day_rates = source.get_for_date(date)
+            if day_rates:
+                rates.setdefault(date, {}).update(day_rates)
 
     return rates
 
 
 class _SberbankRates:
-    _min_supported_date = datetime.date(2013, 1, 1)
     __url_prefix = "http://data.sberbank.ru/"
 
     def __init__(self):
@@ -73,7 +62,7 @@ class _SberbankRates:
                     (log.warning if url_id == len(day_urls) - 1 else log.debug)(
                         "Unable to download '%s': %s. Skipping it...", url, e)
                 else:
-                    raise e
+                    raise Error("Failed to get Sberbank currency rates from {}: {}", url, e)
             else:
                 break
         else:
@@ -152,10 +141,11 @@ class _SberbankRates:
 
 
 class _CurrencyRates(_SberbankRates):
-    _name = "metal"
+    _name = "currency"
     _sberbank_archive_name = "archivecurrencies"
     _sberbank_rates_list_name = "vkurs"
     _sberbank_rates_name = "vk"
+    _min_supported_date = datetime.date(2014, 5, 1)
 
     def _parse(self, sheet):
         try:
@@ -208,9 +198,11 @@ class _CurrencyRates(_SberbankRates):
 
 class _MetalRates(_SberbankRates):
     _name = "metal"
+
     _sberbank_archive_name = "archivoms"
     _sberbank_rates_list_name = "sdmet"
     _sberbank_rates_name = "dm"
+    _min_supported_date = datetime.date(2013, 1, 1)
 
     def _parse(self, sheet):
         try:
