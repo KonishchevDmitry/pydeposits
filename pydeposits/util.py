@@ -78,7 +78,7 @@ def fetch_url(url):
 
     response = requests.get(url, timeout=constants.NETWORK_TIMEOUT)
     if response.status_code != requests.codes.ok:
-        raise RequestException("Server returned an error: {} {}.".format(response.status_code, response.reason),
+        raise RequestException("Server returned an error: {} {}".format(response.status_code, response.reason),
                                response=response)
 
     return response

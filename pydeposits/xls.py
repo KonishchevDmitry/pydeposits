@@ -15,6 +15,15 @@ def find_row(sheet, columns_template):
     raise RowNotFoundError()
 
 
+def find_table(sheet, table_template):
+    row_id, column_id = find_row(sheet, table_template[0])
+    for line, columns_template in enumerate(table_template[1:], start=1):
+        if not cmp_columns(sheet, row_id + line, column_id, columns_template):
+            raise RowNotFoundError()
+
+    return row_id, row_id + len(table_template), column_id
+
+
 def _find_columns(sheet, row_id, columns_template):
     columns = _strip_values(sheet.row_values(row_id))
 

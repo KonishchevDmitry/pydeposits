@@ -5,220 +5,257 @@
 import datetime
 import logging
 import re
-import urllib.request
 
 from decimal import Decimal
 
+import requests
+from requests import RequestException
+
 import xlrd
+from xlrd import XL_CELL_EMPTY as EMPTY, XL_CELL_TEXT as TEXT, XL_CELL_NUMBER as NUMBER
 
-from pydeposits import constants
-from pydeposits.util import Error
+from pydeposits.util import Error, fetch_url
+from pydeposits.xls import RowNotFoundError, find_table, cmp_columns, cmp_column_types
 
-LOG = logging.getLogger("pydeposits.sbrf")
+log = logging.getLogger(__name__)
 
 
 # TODO: get all rates per day
+# FIXME
 def get_rates(dates):
     """Returns Sberbank's rates for a specified dates."""
 
     rates = {}
     rate_urls = {}
-    url_prefix = "http://data.sberbank.ru/"
 
     # URLs may be:
     # /common/img/uploaded/c_list/sdmet/download/2010/01/dm0115.xls
     # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310.xls
     # /common/img/uploaded/banks/uploaded_mb/c_list/sdmet/download/2011/03/dm0310_2.xls
-    rate_url_re = re.compile(
-        r"""["'][^"']+/c_list/sdmet/download/(\d{4})/(\d{2})/dm(\d{2})(\d{2})(_\d)?.xls["']""")
 
     for date in dates:
         try:
-            # SBRF has rate info for metals only since 05.03.2003
-            if date < datetime.date(2003, 3, 5):
-                continue
-
-            LOG.info("Getting SBRF's currency rates for %s...", date)
-
-            # Getting rates for the month -->
-            month_spec = (date.year, date.month)
-
-            day_urls = rate_urls.get(month_spec)
-            if day_urls is None:
-                day_urls = {}
-
-                url = "{0}moscow/ru/quotes/archivoms/index.php?year115={1}&month115={2}".format(
-                    url_prefix, date.year, date.month)
-
-                rate_list_html = urllib.request.urlopen(
-                    url, timeout=constants.NETWORK_TIMEOUT).read().decode("cp1251")
-
-                matches = rate_url_re.findall(rate_list_html)
-                if not matches:
-                    # Month may be empty if it's only starting and there are
-                    # some holidays in the first days.
-                    if (
-                        datetime.date.today().month == date.month and (
-                            (date - datetime.date(date.year, date.month, 1)).days <= 2 or
-
-                            # Long New Year holidays
-                            date.month == 1 and (date - datetime.date(date.year, date.month, 1)).days <= 10 or
-
-                            # Long holidays in May
-                            date.month == 5 and (date - datetime.date(date.year, date.month, 1)).days <= 6
-                        )
-                    ):
-                        continue
-                    else:
-                        raise Error("server returned unknown HTML response")
-
-                for match in matches:
-                    if date.year == int(match[1]) and date.month == int(match[2]):
-                        url = match[0]
-                        if "://" not in url:
-                            url = url_prefix + url.lstrip("/")
-
-                        day_urls.setdefault(int(match[4]), []).append(url)
-                    else:
-                        # If we ask for data that SBRF doesn't have, it returns data for previous month/year.
-                        pass
-
-                rate_urls[month_spec] = day_urls
-            # Getting rates for the month <--
-
-            # Getting XML file with rates for the date -->
-            if date.day not in day_urls:
-                LOG.debug("There is no data for SBRF's currency rates for %s...", date)
-                continue
-
-            for url in day_urls[date.day]:
-                try:
-                    xls_contents = urllib.request.urlopen(
-                        url, timeout=constants.NETWORK_TIMEOUT).read()
-                except urllib.request.HTTPError as e:
-                    if e.code == 404:
-                        # It's a common error when we have 2 reports per day
-                        LOG.debug("Unable to download '%s': %s.", url, e)
-                        error = e
-                    else:
-                        raise e
-                else:
-                    break
-            else:
-                raise error
-            # Getting XML file with rates for the date <--
-
-            try:
-                xls = xlrd.open_workbook(file_contents=xls_contents)
-            except Exception as e:
-                LOG.error("Unable to read data for SBRF's currency rates for %s: %s.", date, e)
-                continue
-
-            # The *.xls file can contain a few empty sheets.
-            # Choosing a non-empty sheet.
-            # -->
-            sheet_id = -1
-
-            for id, sheet in enumerate(xls.sheets()):
-                empty = True
-
-                for row_id in range(0, sheet.nrows):
-                    for cell in sheet.row(row_id):
-                        if cell.ctype == xlrd.XL_CELL_TEXT and cell.value.strip():
-                            empty = False
-                            break
-
-                    if not empty:
-                        break
-
-                if not empty:
-                    if sheet_id >= 0:
-                        raise Error("the *.xls file contains more than one sheet")
-                    else:
-                        sheet_id = id
-
-            if sheet_id < 0:
-                raise Error("the *.xls file doesn't contain any non-empty sheet")
-            # <--
-
-            sheet = xls.sheets()[sheet_id]
-
-            # Search for the title of the rate table -->
-            rates_title_found = False
-
-            for row_id in range(0, sheet.nrows):
-                row = sheet.row(row_id)
-
-                for cell in row:
-                    if (
-                        cell.ctype == xlrd.XL_CELL_TEXT and
-                        (
-                            cell.value.find("Котировки покупки-продажи драгоценных металлов в обезличенном виде") >= 0
-                            or
-                            cell.value.find("Котировки продажи и покупки драгоценных металлов в обезличенном виде") >= 0
-                        )
-                    ):
-                        rates_title_found = True
-                        break
-
-                if rates_title_found:
-                    row_id += 1
-                    break
-            else:
-                raise Error("Unable to find the title of the rate table.")
-            # Search for the title of the rate table <--
-
-            if row_id + 1 >= sheet.nrows:
-                raise Error("The rate table is truncated.")
-
-            # Search for the rate table -->
-            row = sheet.row(row_id)
-
-            texts = []
-            for cell in row:
-                if cell.ctype == xlrd.XL_CELL_TEXT:
-                    texts.append(cell.value.strip())
-
-            if texts != [
-                "Наименование драгоценного металла",
-                "Продажа, руб. за грамм",
-                "Покупка, руб. за грамм"
-            ]:
-                raise Error("Unable to find the rate table.")
-
-            row_id += 1
-            # Search for the rate table <--
-
-            # Get rates -->
-            date_rates = rates.setdefault(date, {})
-
-            for name, ru_name in (
-                ("AUR_SBRF", "Золото"),
-                ("AGR_SBRF", "Серебро"),
-                ("PTR_SBRF", "Платина"),
-                ("PDR_SBRF", "Палладий")
-            ):
-                row = sheet.row(row_id)
-
-                data = []
-                for cell in row:
-                    if cell.ctype == xlrd.XL_CELL_TEXT:
-                        data.append(cell.value.strip())
-                    elif cell.ctype == xlrd.XL_CELL_NUMBER:
-                        data.append(cell.value)
-
-                if len(data) != 3 or data[0] != ru_name:
-                    raise Error("Unable to find {}'s rate.", name)
-
-                date_rates[name] = ( Decimal(str(data[1])), Decimal(str(data[2])) )
-
-                row_id += 1
-                if row_id >= sheet.nrows:
-                    break
-            # Get rates <--
-
-            LOG.debug("Gotten rates: %s", date_rates)
+            self.get_for_date()
         except Exception as e:
             raise Error("Unable to get rate info from Sberbank for {}:", date).append(e)
 
+    # FIXME
+    date_rates = rates.setdefault(date, {})
+
     return rates
+
+
+class _SberbankRates:
+    _min_supported_date = datetime.date(2013, 1, 1)
+    __url_prefix = "http://data.sberbank.ru/"
+
+    def __init__(self):
+        super(_SberbankRates, self).__init__()
+        self.__month_urls_cache = {}
+
+    def get_for_date(self, date):
+        if date < self._min_supported_date:
+            return
+
+        log.info("Getting Sberbank %s rates for %s...", self._name, date)
+
+        day_urls = self._get_urls(date)
+        if not day_urls:
+            log.debug("There is no data for Sberbank %s rates for %s.", self._name, date)
+            return
+
+        for url_id, url in enumerate(day_urls):
+            try:
+                xls_contents = fetch_url(url).content
+            except RequestException as e:
+                if e.response is not None and e.response.status_code == requests.codes.not_found:
+                    # It's a common error when we have 2 reports per day
+                    (log.warning if url_id == len(day_urls) - 1 else log.debug)(
+                        "Unable to download '%s': %s. Skipping it...", url, e)
+                else:
+                    raise e
+            else:
+                break
+        else:
+            return
+
+        try:
+            rates = self.parse(xls_contents)
+        except Exception as e:
+            raise Error("Error while reading Sberbank currency rates obtained from {}: {}", url, e)
+
+        log.debug("Gotten rates: %s", rates)
+
+        return rates
+
+    def _get_urls(self, date):
+        month_id = (date.year, date.month)
+
+        try:
+            day_urls = self.__month_urls_cache[month_id]
+        except KeyError:
+            try:
+                day_urls = self._get_month_urls(date)
+            except Exception as e:
+                raise Error("Unable to obtain a list of *.xls for {} rates for {:02d}.{}: {}",
+                            self._name, date.month, date.year, e)
+
+            self.__month_urls_cache[month_id] = day_urls
+
+        return day_urls.get(date.day, [])
+
+    def _get_month_urls(self, date):
+        month_rates_url = "{prefix}moscow/ru/quotes/{archive}/index.php?year115={year}&month115={month}".format(
+            prefix=self.__url_prefix, archive=self._sberbank_archive_name, year=date.year, month=date.month)
+
+        rate_list_html = fetch_url(month_rates_url).text
+
+        base_url = "/common/img/uploaded/banks/uploaded_mb/c_list/{}/download/".format(self._sberbank_rates_list_name)
+
+        rate_url_matches = list(re.finditer(
+            r'"(?P<url>' + re.escape(base_url) + r'(?P<year>\d{4})/(?P<upload_month>\d{2})/' +
+            self._sberbank_rates_name + r'(?P<month>\d{2})(?P<day>\d{2})(_\d)?.xls)"', rate_list_html, re.VERBOSE))
+
+        if not rate_url_matches:
+            raise Error("Server returned an unexpected response.")
+
+        day_urls = {}
+
+        for match in rate_url_matches:
+            rate_year, rate_month = int(match.group("year")), int(match.group("month"))
+
+            if (rate_year, rate_month) != (date.year, date.month):
+                # If we ask for data that Sberbank doesn't have it returns data for previous/current month/year.
+                if not day_urls and _is_month_may_be_empty(date):
+                    return day_urls
+
+                raise Error("Server returned data for invalid month ({:02d}.{} instead of {:02d}.{}) on {}.",
+                            rate_month, rate_year, date.month, date.year, month_rates_url)
+
+            url = match.group("url")
+            if "://" not in url:
+                url = self.__url_prefix + url.lstrip("/")
+
+            day_urls.setdefault(int(match.group("day")), []).append(url)
+
+        return day_urls
+
+    def parse(self, xls_contents):
+        sheets = xlrd.open_workbook(file_contents=xls_contents).sheets()
+
+        if len(sheets) == 0:
+            raise Error("The *.xls file doesn't contain any sheet.")
+        elif len(sheets) > 1:
+            raise Error("The *.xls file contains more than one sheet.")
+
+        return self._parse(sheets[0])
+
+
+class _CurrencyRates(_SberbankRates):
+    _name = "metal"
+    _sberbank_archive_name = "archivecurrencies"
+    _sberbank_rates_list_name = "vkurs"
+    _sberbank_rates_name = "vk"
+
+    def _parse(self, sheet):
+        try:
+            _, row_id, column_id = find_table(sheet, (
+                ("Курсы для проведения операций покупки и продажи наличной иностранной",),
+                ("валюты за наличную валюту Российской Федерации:",),
+                ("Наименование валют", "", "", "Масштаб", "Курс покупки", "Курс продажи"),
+            ))
+        except RowNotFoundError:
+            raise Error("Unable to find rates table.")
+
+        currencies = {
+            "Доллар США": "USD_SBRF",
+            "Евро":       "EUR_SBRF",
+        }
+
+        rates = {}
+
+        while row_id < sheet.nrows:
+            cell = sheet.cell(row_id, column_id)
+            if cell.ctype == EMPTY:
+                break
+
+            if not cmp_column_types(sheet, row_id, column_id, (TEXT, EMPTY, EMPTY, NUMBER, NUMBER, NUMBER)):
+                raise Error("Rates table validation failed.")
+
+            try:
+                currency_id = currencies[cell.value.strip()]
+            except KeyError:
+                pass
+            else:
+                scale = sheet.cell_value(row_id, column_id + 3)
+                if scale != 1:
+                    raise Error("Got {} rate with invalid scale: {}.", currency_id, scale)
+
+                if currency_id in rates:
+                    raise Error("Got a duplicated currency rates for {}.", currency_id)
+
+                rates[currency_id] = tuple(
+                    Decimal(value) for value in reversed(sheet.row_values(row_id, column_id + 4, column_id + 6)))
+
+            row_id += 1
+
+        missing_currencies = set(rates.keys()) - set(currencies.values())
+        if missing_currencies:
+            raise Error("Unable to find rates for the following currencies: {}.", ", ".join(missing_currencies))
+
+        return rates
+
+
+class _MetalRates(_SberbankRates):
+    _name = "metal"
+    _sberbank_archive_name = "archivoms"
+    _sberbank_rates_list_name = "sdmet"
+    _sberbank_rates_name = "dm"
+
+    def _parse(self, sheet):
+        try:
+            _, row_id, column_id = find_table(sheet, (
+                ("3. Котировки продажи и покупки драгоценных металлов в обезличенном виде:",),
+                ("Наименование драгоценного металла", "", "Продажа, руб. за грамм", "", "Покупка, руб. за грамм", ""),
+            ))
+        except RowNotFoundError:
+            raise Error("Unable to find rates table.")
+
+        rates = {}
+
+        for row_id, (currency_id, currency_name) in enumerate((
+            ("AUR_SBRF", "Золото"),
+            ("AGR_SBRF", "Серебро"),
+            ("PTR_SBRF", "Платина"),
+            ("PDR_SBRF", "Палладий"),
+        ), start=row_id):
+            if (
+                not cmp_columns(sheet, row_id, column_id, (currency_name,)) or
+                not cmp_column_types(sheet, row_id, column_id, (TEXT, EMPTY, NUMBER, EMPTY, NUMBER, EMPTY))
+            ):
+                raise Error("Rates table validation failed.")
+
+            rates[currency_id] = tuple(
+                Decimal(value) for value in (sheet.cell_value(row_id, column_id + 2),
+                                             sheet.cell_value(row_id, column_id + 4)))
+
+        return rates
+
+
+def _is_month_may_be_empty(date):
+    # Month may be empty if it's only starting and there are
+    # some holidays in the first days.
+
+    today = datetime.date.today()
+
+    return (
+        (date.year, date.month) == (today.year, today.month) and (
+            (today - datetime.date(today.year, today.month, 1)).days <= 2 or
+
+            # Long New Year holidays
+            today.month == 1 and (today - datetime.date(today.year, today.month, 1)).days <= 10 or
+
+            # Long holidays in May
+            today.month == 5 and (today - datetime.date(today.year, today.month, 1)).days <= 6
+        )
+    )
