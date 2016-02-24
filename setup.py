@@ -16,7 +16,7 @@ class PyTest(Test):
 with open("README") as readme:
     setup(
         name="pydeposits",
-        version="1.1.3",
+        version="1.2",
 
         license="GPL",
         description=readme.readline().strip(),
