@@ -28,13 +28,13 @@ def get():
         raise Error("Failed to load deposit info from {}:", info_path).append(e)
 
     fields = (
-        # TODO: source amount
         ("bank",            "string",  True ),
         ("open_date",       "date",    True ),
         ("close_date",      "date",    False),
         ("currency",        "string",  True ),
         ("source_currency", "string",  False),
         ("amount",          "decimal", True ),
+        ("source_amount",   "decimal", False),
         ("interest",        "decimal", False),
         ("capitalization",  "decimal", False),
         ("completions",     "",        False),
@@ -84,6 +84,9 @@ def get():
                 else:
                     raise Error("Logical error.")
 
+            if "source_amount" in deposit and "source_currency" not in deposit:
+                raise Error("`source_currency` must be specified when `source_amount` is specified.")
+
             if "completions" in deposit:
                 for completion in deposit["completions"]:
                     if(
@@ -125,6 +128,8 @@ For example:
 #                     profit or loss depending on fluctuation of currency
 #                     rates.
 # * amount          - amount of money on the deposit in the specified currency
+# * source_amount   - amount of money in the source currency that was converted
+#                     into the deposit's currency
 # * interest        - the deposit's interest
 # * capitalization  - You must specify capitalization field if your deposit has
 #                     capitalization option. The value is a number of months

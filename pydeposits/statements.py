@@ -218,18 +218,23 @@ def _calculate_past_cost(holding, today):
 
         if past_rates is not None:
             if source_currency == constants.LOCAL_CURRENCY:
-                past_rate = past_rates[0]
+                if "source_amount" in holding:
+                    holding["past_cost"] = holding["source_amount"]
+                else:
+                    holding["past_cost"] = past_rates[0] * holding["amount"]
             elif source_currency == holding["currency"]:
-                past_rate = past_rates[1]
+                holding["past_cost"] = past_rates[1] * holding["amount"]
             else:
                 # TODO FIXME
                 raise Error("Not supported")
 
-            holding["past_cost"] = past_rate * holding["amount"]
-
     for completion in holding.get("completions", []):
         if completion["date"] <= today:
-            holding["past_cost"] += completion["amount"]
+            if holding["currency"] == constants.LOCAL_CURRENCY:
+                holding["past_cost"] += completion["amount"]
+            else:
+                # TODO FIXME
+                raise Error("Not supported")
 
 
 def _calculate_pure_profit(holding, today):
@@ -253,7 +258,7 @@ def _calculate_rate_profit(holding, today):
     source_currency = holding.get("source_currency", holding["currency"])
 
     if (
-        ( source_currency != constants.LOCAL_CURRENCY or holding["currency"] != constants.LOCAL_CURRENCY ) and
+        (source_currency != constants.LOCAL_CURRENCY or holding["currency"] != constants.LOCAL_CURRENCY) and
         "past_cost" in holding
     ):
         cur_rates = RateArchive().get_approx(holding["currency"], today)
