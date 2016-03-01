@@ -105,10 +105,10 @@ class _SberbankRates:
             r'"(?P<url>' + re.escape(base_url) + r'(?P<year>\d{4})/(?P<upload_month>\d{2})/' +
             self._sberbank_rates_name + r'(?P<month>\d{2})(?P<day>\d{2})(_\d)?.xls)"', rate_list_html, re.VERBOSE))
 
-        if not rate_url_matches:
-            raise Error("Server returned an unexpected response.")
-
         day_urls = {}
+
+        if not rate_url_matches and not _is_month_may_be_empty(date):
+            raise Error("Server returned an unexpected response.")
 
         for match in rate_url_matches:
             rate_year, rate_month = int(match.group("year")), int(match.group("month"))
