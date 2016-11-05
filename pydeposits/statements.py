@@ -213,15 +213,14 @@ def _calculate_past_cost(holding, today):
 
     if source_currency == constants.LOCAL_CURRENCY and holding["currency"] == constants.LOCAL_CURRENCY:
         holding["past_cost"] = holding["amount"]
+    elif source_currency == constants.LOCAL_CURRENCY and "source_amount" in holding:
+        holding["past_cost"] = holding["source_amount"]
     else:
         past_rates = RateArchive().get_approx(holding["currency"], holding["open_date"])
 
         if past_rates is not None:
             if source_currency == constants.LOCAL_CURRENCY:
-                if "source_amount" in holding:
-                    holding["past_cost"] = holding["source_amount"]
-                else:
-                    holding["past_cost"] = past_rates[0] * holding["amount"]
+                holding["past_cost"] = past_rates[0] * holding["amount"]
             elif source_currency == holding["currency"]:
                 holding["past_cost"] = past_rates[1] * holding["amount"]
             else:
