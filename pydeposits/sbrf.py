@@ -35,6 +35,26 @@ def get_rates(dates):
     return rates
 
 
+def _get_tinkoff_rates():
+    rates = {}
+
+    try:
+        for rate in fetch_url("https://www.tinkoff.ru/api/v1/currency_rates").json()["payload"]["rates"]:
+            if (
+                rate["category"] == "DepositPayments" and
+                rate["fromCurrency"]["name"] in ("USD", "EUR") and
+                rate["toCurrency"]["name"] == "RUB"
+            ):
+                rates[rate["fromCurrency"]["name"] + "_SBRF"] = (Decimal(rate["sell"]), Decimal(rate["buy"]))
+
+        if len(rates) != 2:
+            raise Error("Unable to find all requested rates in API response")
+    except Exception as e:
+        raise Error("Failed to get currency rates from Tinkoff: {}.", e)
+
+    return rates
+
+
 class _SberbankRates:
     __url_prefix = "http://data.sberbank.ru/"
 
@@ -62,7 +82,7 @@ class _SberbankRates:
                     (log.warning if url_id == len(day_urls) - 1 else log.debug)(
                         "Unable to download '%s': %s. Skipping it...", url, e)
                 else:
-                    raise Error("Failed to get Sberbank currency rates from {}: {}", url, e)
+                    raise Error("Failed to get Sberbank currency rates from {}: {}.", url, e)
             else:
                 break
         else:
@@ -86,7 +106,7 @@ class _SberbankRates:
             try:
                 day_urls = self._get_month_urls(date)
             except Exception as e:
-                raise Error("Unable to obtain a list of *.xls for {} rates for {:02d}.{}: {}",
+                raise Error("Unable to obtain a list of *.xls for {} rates for {:02d}.{}: {}.",
                             self._name, date.month, date.year, e)
 
             self.__month_urls_cache[month_id] = day_urls
@@ -108,7 +128,7 @@ class _SberbankRates:
         day_urls = {}
 
         if not rate_url_matches and not _is_month_may_be_empty(date):
-            raise Error("Server returned an unexpected response.")
+            raise Error("Server returned an unexpected response")
 
         for match in rate_url_matches:
             rate_year, rate_month = int(match.group("year")), int(match.group("month"))
@@ -118,7 +138,7 @@ class _SberbankRates:
                 if not day_urls and _is_month_may_be_empty(date):
                     return day_urls
 
-                raise Error("Server returned data for invalid month ({:02d}.{} instead of {:02d}.{}) on {}.",
+                raise Error("Server returned data for invalid month ({:02d}.{} instead of {:02d}.{}) on {}",
                             rate_month, rate_year, date.month, date.year, month_rates_url)
 
             url = match.group("url")
@@ -146,6 +166,22 @@ class _CurrencyRates(_SberbankRates):
     _sberbank_rates_list_name = "vkurs"
     _sberbank_rates_name = "vk"
     _min_supported_date = datetime.date(2014, 5, 1)
+
+    def get_for_date(self, date):
+        try:
+            return super(_CurrencyRates, self).get_for_date(date)
+        except Error as error:
+            # Sberbank currency rates archive is broken now, so fallback to Tinkoff on error as a temporary workaround
+
+            today = datetime.date.today()
+            yesterday = today - datetime.timedelta(days=1)
+
+            if date in (today, yesterday):
+                log.info("%s Falling back to Tinkoff...", error)
+                return _get_tinkoff_rates()
+            else:
+                log.error("%s", error)
+                return {}
 
     def _parse(self, sheet):
         try:
