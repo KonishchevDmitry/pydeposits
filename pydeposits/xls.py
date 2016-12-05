@@ -61,5 +61,5 @@ def _cmp_cell_values(template, values):
 
 
 def _strip_values(values):
-    return [value.strip() if isinstance(value, str) else value
+    return [value.strip().replace("\n", " ") if isinstance(value, str) else value
             for value in values]

@@ -243,8 +243,9 @@ class _MetalRates(_SberbankRates):
     def _parse(self, sheet):
         try:
             _, row_id, column_id = find_table(sheet, (
-                ("3. Котировки продажи и покупки драгоценных металлов в обезличенном виде:",),
-                ("Наименование драгоценного металла", "", "Продажа, руб. за грамм", "", "Покупка, руб. за грамм", ""),
+                ('3) Котировки покупки и продажи ОМС в "Сбербанк Онлайн":',),
+                ("", "", "", ""),
+                ("Наименование драгоценного металла", "", "Покупка, руб. за грамм", "Продажа, руб. за грамм"),
             ))
         except RowNotFoundError:
             raise Error("Unable to find rates table.")
@@ -259,13 +260,13 @@ class _MetalRates(_SberbankRates):
         ), start=row_id):
             if (
                 not cmp_columns(sheet, row_id, column_id, (currency_name,)) or
-                not cmp_column_types(sheet, row_id, column_id, (TEXT, EMPTY, NUMBER, EMPTY, NUMBER, EMPTY))
+                not cmp_column_types(sheet, row_id, column_id, (TEXT, EMPTY, NUMBER, NUMBER))
             ):
                 raise Error("Rates table validation failed.")
 
             rates[currency_id] = tuple(
-                Decimal(value) for value in (sheet.cell_value(row_id, column_id + 2),
-                                             sheet.cell_value(row_id, column_id + 4)))
+                Decimal(value) for value in (sheet.cell_value(row_id, column_id + 3),
+                                             sheet.cell_value(row_id, column_id + 2)))
 
         return rates
 
