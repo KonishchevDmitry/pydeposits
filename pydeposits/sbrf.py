@@ -151,11 +151,8 @@ class _SberbankRates:
 
     def parse(self, xls_contents):
         sheets = xlrd.open_workbook(file_contents=xls_contents).sheets()
-
-        if len(sheets) == 0:
+        if len(sheets) < 1:
             raise Error("The *.xls file doesn't contain any sheet.")
-        elif len(sheets) > 1:
-            raise Error("The *.xls file contains more than one sheet.")
 
         return self._parse(sheets[0])
 
