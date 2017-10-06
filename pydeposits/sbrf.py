@@ -276,12 +276,12 @@ def _is_month_may_be_empty(date):
 
     return (
         (date.year, date.month) == (today.year, today.month) and (
-            (today - datetime.date(today.year, today.month, 1)).days <= 2 or
+            (today - datetime.date(today.year, today.month, 1)).days <= 6 or
 
             # Long New Year holidays
             today.month == 1 and (today - datetime.date(today.year, today.month, 1)).days <= 10 or
 
             # Long holidays in May
-            today.month == 5 and (today - datetime.date(today.year, today.month, 1)).days <= 6
+            today.month == 5 and (today - datetime.date(today.year, today.month, 1)).days <= 8
         )
     )
